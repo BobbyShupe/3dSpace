@@ -1,7 +1,10 @@
+//							gcc -o opengl opengl.c -lm -lGL -lGLU -lglut
+
 #include <GL/glut.h>
 #include <math.h>
 #include <stdbool.h>
-
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #define FPS 60
 #define TO_RADIANS 3.14/180.0
@@ -31,6 +34,18 @@ struct cube
 	float x,y,z,w,h,d;
 	uint16_t image;	
 };
+
+struct imageParameters
+{
+	int width;
+	int height;
+	int nrChannels;	
+};
+
+unsigned char* imageData;
+uint16_t imageCount = 0;
+struct imageParameters imageParams[9999];
+
 
 struct Motion motion = {false,false,false,false,false,false};
 
