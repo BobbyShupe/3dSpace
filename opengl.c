@@ -1,5 +1,6 @@
-//							gcc -o opengl opengl.c -lm -lGL -lGLU -lglut
+//							gcc -o opengl opengl.c -lm -lGL -lGLU -lglut -lGLEW
 
+#include <GL/glew.h>
 #include <GL/glut.h>
 #include <math.h>
 #include <stdbool.h>
@@ -63,6 +64,9 @@ void init()
     glutWarpPointer(width/2,height/2);
 }
 
+unsigned int texture;
+
+
 int main(int argc,char**argv)
 {
 	cubes = (struct cube*) malloc(sizeof(struct cube) * 10000);
@@ -79,6 +83,25 @@ int main(int argc,char**argv)
     glutKeyboardFunc(keyboard);
     glutKeyboardUpFunc(keyboard_up);
 
+
+	imageData = stbi_load("15-09-2024PVL.jpg", &imageParams[imageCount].width, &imageParams[imageCount].height, &imageParams[imageCount].nrChannels, 0);
+	glGenTextures(1, &texture);
+
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+if (!imageData) exit(1);
+	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, imageParams[imageCount].width, imageParams[imageCount].height, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[imageCount].width, imageParams[imageCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+printf("here\n");	
+
+	//glActiveTexture(GL_TEXTURE0);
+//	glGenerateMipmap(GL_TEXTURE_2D);
+
+	stbi_image_free(imageData);
     glutMainLoop();
     return 0;
 }
@@ -90,8 +113,8 @@ int main(int argc,char**argv)
 void draw()
 {
     glEnable(GL_TEXTURE_2D);
-    GLuint texture;
-    glGenTextures(1,&texture);
+	GLuint floorTexture;
+    glGenTextures(1,&floorTexture);
 
     unsigned char texture_data[2][2][4] =
                     {
@@ -99,7 +122,7 @@ void draw()
                         255,255,255,255,    0,0,0,255
                     };
 
-    glBindTexture(GL_TEXTURE_2D,texture);
+    glBindTexture(GL_TEXTURE_2D,floorTexture);
     glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,2,2,0,GL_RGBA,GL_UNSIGNED_BYTE,texture_data);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -292,52 +315,88 @@ void makeCube(int16_t _x, int16_t _y, int16_t _z)
 
 void drawCubes()
 {
+	glEnable(GL_TEXTURE_2D);
 	for (uint16_t i = 0; i < cubeCount; i ++)
 	{
 		glPushMatrix();
 		glTranslatef(cubes[i].x, cubes[i].y, cubes[i].z);
+
+    glBindTexture(GL_TEXTURE_2D,texture);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[imageCount].width, imageParams[imageCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                    GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_NEAREST);
+
 glBegin(GL_QUADS);                // Begin drawing the color cube with 6 quads
                                   // Top face (y = 1.0f)
                                   // Define vertices in counter-clockwise (CCW) order with normal pointing out
 glColor3f(0.0f, 1.0f, 0.0f);     // Green
+glTexCoord2f(0.0,0.0);
 glVertex3f(1.0f, 1.0f, -1.0f);
+glTexCoord2f(1.0,0.0);
 glVertex3f(-1.0f, 1.0f, -1.0f);
+glTexCoord2f(1.0,1.0);
 glVertex3f(-1.0f, 1.0f, 1.0f);
+glTexCoord2f(0.0,1.0);
 glVertex3f(1.0f, 1.0f, 1.0f);
 
 // Bottom face (y = -1.0f)
 glColor3f(1.0f, 0.5f, 0.0f);     // Orange
+glTexCoord2f(0.0,0.0);
 glVertex3f(1.0f, -1.0f, 1.0f);
+glTexCoord2f(1.0,0.0);
 glVertex3f(-1.0f, -1.0f, 1.0f);
+glTexCoord2f(1.0,1.0);
 glVertex3f(-1.0f, -1.0f, -1.0f);
+glTexCoord2f(0.0,1.0);
 glVertex3f(1.0f, -1.0f, -1.0f);
 
 // Front face  (z = 1.0f)
 glColor3f(1.0f, 0.0f, 0.0f);     // Red
+glTexCoord2f(0.0,0.0);
 glVertex3f(1.0f, 1.0f, 1.0f);
+glTexCoord2f(1.0,0.0);
 glVertex3f(-1.0f, 1.0f, 1.0f);
+glTexCoord2f(1.0,1.0);
 glVertex3f(-1.0f, -1.0f, 1.0f);
+glTexCoord2f(0.0,1.0);
 glVertex3f(1.0f, -1.0f, 1.0f);
 
 // Back face (z = -1.0f)
 glColor3f(1.0f, 1.0f, 0.0f);     // Yellow
+glTexCoord2f(0.0,0.0);
 glVertex3f(1.0f, -1.0f, -1.0f);
+glTexCoord2f(1.0,0.0);
 glVertex3f(-1.0f, -1.0f, -1.0f);
+glTexCoord2f(1.0,1.0);
 glVertex3f(-1.0f, 1.0f, -1.0f);
+glTexCoord2f(0.0,1.0);
 glVertex3f(1.0f, 1.0f, -1.0f);
 
 // Left face (x = -1.0f)
 glColor3f(0.0f, 0.0f, 1.0f);     // Blue
+glTexCoord2f(0.0,0.0);
 glVertex3f(-1.0f, 1.0f, 1.0f);
+glTexCoord2f(1.0,0.0);
 glVertex3f(-1.0f, 1.0f, -1.0f);
+glTexCoord2f(1.0,1.0);
 glVertex3f(-1.0f, -1.0f, -1.0f);
+glTexCoord2f(0.0,1.0);
 glVertex3f(-1.0f, -1.0f, 1.0f);
 
 // Right face (x = 1.0f)
 glColor3f(1.0f, 0.0f, 1.0f);     // Magenta
+glTexCoord2f(0.0,0.0);
 glVertex3f(1.0f, 1.0f, -1.0f);
+glTexCoord2f(1.0,0.0);
 glVertex3f(1.0f, 1.0f, 1.0f);
+glTexCoord2f(1.0,1.0);
 glVertex3f(1.0f, -1.0f, 1.0f);
+glTexCoord2f(0.0,1.0);
 glVertex3f(1.0f, -1.0f, -1.0f);
 glEnd();  // End of drawing color-cube
 
