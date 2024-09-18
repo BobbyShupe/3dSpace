@@ -84,7 +84,7 @@ int main(int argc,char**argv)
     glutKeyboardUpFunc(keyboard_up);
 
 
-	imageData = stbi_load("15-09-2024PVL.jpg", &imageParams[imageCount].width, &imageParams[imageCount].height, &imageParams[imageCount].nrChannels, 0);
+	imageData = stbi_load("17-09-2024PVL.jpg", &imageParams[imageCount].width, &imageParams[imageCount].height, &imageParams[imageCount].nrChannels, 0);
 	glGenTextures(1, &texture);
 
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -96,7 +96,6 @@ if (!imageData) exit(1);
 	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, imageParams[imageCount].width, imageParams[imageCount].height, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[imageCount].width, imageParams[imageCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
-printf("here\n");	
 
 	//glActiveTexture(GL_TEXTURE0);
 //	glGenerateMipmap(GL_TEXTURE_2D);
@@ -161,7 +160,7 @@ void reshape(int w,int h)
     glViewport(0,0,w,h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60,16.0/9.0,1,7500);
+    gluPerspective(60,16.0/9.0,.01,7500);
     glMatrixMode(GL_MODELVIEW);
 
 }
@@ -188,8 +187,8 @@ void passive_motion(int x,int y)
     dev_y = (height/2)-y;
 
     /* apply the changes to pitch and yaw*/
-    yaw+=(float)dev_x/10.0;
-    pitch+=(float)dev_y/10.0;
+    yaw+=(float)dev_x/20.0;
+    pitch+=(float)dev_y/20.0;
 }
 
 void camera()
@@ -197,31 +196,31 @@ void camera()
 
     if(motion.Forward)
     {
-        camX += cos((yaw+90)*TO_RADIANS)/5.0;
-        camZ -= sin((yaw+90)*TO_RADIANS)/5.0;
+        camX += cos((yaw+90)*TO_RADIANS)/50.0;
+        camZ -= sin((yaw+90)*TO_RADIANS)/50.0;
     }
     if(motion.Backward)
     {
-        camX += cos((yaw+90+180)*TO_RADIANS)/5.0;
-        camZ -= sin((yaw+90+180)*TO_RADIANS)/5.0;
+        camX += cos((yaw+90+180)*TO_RADIANS)/50.0;
+        camZ -= sin((yaw+90+180)*TO_RADIANS)/50.0;
     }
     if(motion.Left)
     {
-        camX += cos((yaw+90+90)*TO_RADIANS)/5.0;
-        camZ -= sin((yaw+90+90)*TO_RADIANS)/5.0;
+        camX += cos((yaw+90+90)*TO_RADIANS)/50.0;
+        camZ -= sin((yaw+90+90)*TO_RADIANS)/50.0;
     }
     if(motion.Right)
     {
-        camX += cos((yaw+90-90)*TO_RADIANS)/5.0;
-        camZ -= sin((yaw+90-90)*TO_RADIANS)/5.0;
+        camX += cos((yaw+90-90)*TO_RADIANS)/50.0;
+        camZ -= sin((yaw+90-90)*TO_RADIANS)/50.0;
     }
 	if(motion.Up)
 	{
-	    camY += 1/5.0; // Move up
+	    camY += 1/50.0; // Move up
 	}
 	if(motion.Down)
 	{
-	    camY -= 1/5.0; // Move down
+	    camY -= 1/50.0; // Move down
 	}
     /*limit the values of pitch
       between -60 and 70
