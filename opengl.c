@@ -32,7 +32,7 @@ struct Motion
 
 struct cube
 {
-	float x,y,z,w,h,d;
+	float x,y,z,w,h,d,rX,rY,rZ;
 	uint16_t image;	
 };
 
@@ -73,6 +73,10 @@ bool keys[255];
 bool axisX = false;
 bool axisY = false;
 bool axisZ = false;
+
+bool scale = false;
+bool move = false;
+bool rotate = false;
 
 int main(int argc,char**argv)
 {
@@ -246,7 +250,7 @@ void camera()
 
 void keyboard(unsigned char key,int x,int y)
 {
-	//printf("%d\n", key);
+	printf("%d\n", key);
     switch(key)
     {
     case 'W':
@@ -309,6 +313,40 @@ void keyboard(unsigned char key,int x,int y)
 			axisZ = !axisZ;
 		}
 	break;
+		if (cubeCount > 0)
+		{
+			case '+':
+			if (axisX)
+			{
+				cubes[selectionIndex].w += 0.1f;
+			}
+			if (axisY)
+			{
+				cubes[selectionIndex].h += 0.1f;
+			}
+			if (axisZ)
+			{
+				cubes[selectionIndex].d += 0.1f;
+			}
+
+			break;
+			case '-':
+			if (axisX)
+			{
+				cubes[selectionIndex].w -= 0.1f;
+			}
+			if (axisY)
+			{
+				cubes[selectionIndex].h -= 0.1f;
+			}
+			if (axisZ)
+			{
+				cubes[selectionIndex].d -= 0.1f;
+			}
+
+			break;
+	
+		}
     }
 }
 void keyboard_up(unsigned char key,int x,int y)
@@ -360,6 +398,9 @@ void makeCube(float _x, float _y, float _z)
 	cubes[cubeCount].x = newCube.x;
 	cubes[cubeCount].y = newCube.y;
 	cubes[cubeCount].z = newCube.z;	
+	cubes[cubeCount].w = 1.0f;
+	cubes[cubeCount].h = 1.0f;
+	cubes[cubeCount].d = 1.0f;
 	cubeCount ++;
 }
 
@@ -387,68 +428,68 @@ glBegin(GL_QUADS);                // Begin drawing the color cube with 6 quads
                                   // Define vertices in counter-clockwise (CCW) order with normal pointing out
 glColor3f(0.0f, 1.0f, 0.0f);     // Green
 glTexCoord2f(0.0,0.0);
-glVertex3f(1.0f, 1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
 glTexCoord2f(1.0,0.0);
-glVertex3f(-1.0f, 1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
 glTexCoord2f(1.0,1.0);
-glVertex3f(-1.0f, 1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
 glTexCoord2f(0.0,1.0);
-glVertex3f(1.0f, 1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
 
 // Bottom face (y = -1.0f)
 glColor3f(1.0f, 0.5f, 0.0f);     // Orange
 glTexCoord2f(0.0,0.0);
-glVertex3f(1.0f, -1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
 glTexCoord2f(1.0,0.0);
-glVertex3f(-1.0f, -1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
 glTexCoord2f(1.0,1.0);
-glVertex3f(-1.0f, -1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
 glTexCoord2f(0.0,1.0);
-glVertex3f(1.0f, -1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
 
 // Front face  (z = 1.0f)
 glColor3f(1.0f, 0.0f, 0.0f);     // Red
 glTexCoord2f(0.0,0.0);
-glVertex3f(1.0f, 1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
 glTexCoord2f(1.0,0.0);
-glVertex3f(-1.0f, 1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
 glTexCoord2f(1.0,1.0);
-glVertex3f(-1.0f, -1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
 glTexCoord2f(0.0,1.0);
-glVertex3f(1.0f, -1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
 
 // Back face (z = -1.0f)
 glColor3f(1.0f, 1.0f, 0.0f);     // Yellow
 glTexCoord2f(0.0,0.0);
-glVertex3f(1.0f, -1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
 glTexCoord2f(1.0,0.0);
-glVertex3f(-1.0f, -1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
 glTexCoord2f(1.0,1.0);
-glVertex3f(-1.0f, 1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
 glTexCoord2f(0.0,1.0);
-glVertex3f(1.0f, 1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
 
 // Left face (x = -1.0f)
 glColor3f(0.0f, 0.0f, 1.0f);     // Blue
 glTexCoord2f(0.0,0.0);
-glVertex3f(-1.0f, 1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
 glTexCoord2f(1.0,0.0);
-glVertex3f(-1.0f, 1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
 glTexCoord2f(1.0,1.0);
-glVertex3f(-1.0f, -1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
 glTexCoord2f(0.0,1.0);
-glVertex3f(-1.0f, -1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
 
 // Right face (x = 1.0f)
 glColor3f(1.0f, 0.0f, 1.0f);     // Magenta
 glTexCoord2f(0.0,0.0);
-glVertex3f(1.0f, 1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
 glTexCoord2f(1.0,0.0);
-glVertex3f(1.0f, 1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
 glTexCoord2f(1.0,1.0);
-glVertex3f(1.0f, -1.0f, 1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
 glTexCoord2f(0.0,1.0);
-glVertex3f(1.0f, -1.0f, -1.0f);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
 
 glEnd();  // End of drawing color-cube
 
@@ -464,40 +505,40 @@ glEnd();  // End of drawing color-cube
                                   // Top face (y = 1.0f)
                                   // Define vertices in counter-clockwise (CCW) order with normal pointing out
 			glColor3f(1.0f, 1.0f, 1.0f);     // Green
-			glVertex3f(1.0f, 1.0f, -1.0f);
-			glVertex3f(-1.0f, 1.0f, -1.0f);
-			glVertex3f(-1.0f, 1.0f, 1.0f);
-			glVertex3f(1.0f, 1.0f, 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
 
 // Bottom face (y = -1.0f)
-			glVertex3f(1.0f, -1.0f, 1.0f);
-			glVertex3f(-1.0f, -1.0f, 1.0f);
-			glVertex3f(-1.0f, -1.0f, -1.0f);
-			glVertex3f(1.0f, -1.0f, -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
 
 // Front face  (z = 1.0f)
-			glVertex3f(1.0f, 1.0f, 1.0f);
-			glVertex3f(-1.0f, 1.0f, 1.0f);
-			glVertex3f(-1.0f, -1.0f, 1.0f);
-			glVertex3f(1.0f, -1.0f, 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
 
 // Back face (z = -1.0f)
-			glVertex3f(1.0f, -1.0f, -1.0f);
-			glVertex3f(-1.0f, -1.0f, -1.0f);
-			glVertex3f(-1.0f, 1.0f, -1.0f);
-			glVertex3f(1.0f, 1.0f, -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
 
 // Left face (x = -1.0f)
-			glVertex3f(-1.0f, 1.0f, 1.0f);
-			glVertex3f(-1.0f, 1.0f, -1.0f);
-			glVertex3f(-1.0f, -1.0f, -1.0f);
-			glVertex3f(-1.0f, -1.0f, 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
 
 // Right face (x = 1.0f)
-			glVertex3f(1.0f, 1.0f, -1.0f);
-			glVertex3f(1.0f, 1.0f, 1.0f);
-			glVertex3f(1.0f, -1.0f, 1.0f);
-			glVertex3f(1.0f, -1.0f, -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
+			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
 	
 			glEnd();  // End of drawing color-cube
 
