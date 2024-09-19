@@ -54,7 +54,7 @@ struct cube* cubes;
 uint16_t cubeCount = 0;
 struct cube newCube;
 
-void makeCube(int16_t,int16_t,int16_t);
+void makeCube(float,float,float);
 void drawCubes();
 void init()
 {
@@ -66,6 +66,13 @@ void init()
 
 unsigned int texture;
 
+uint16_t selectionIndex = 0;
+
+bool keys[255];
+
+bool axisX = false;
+bool axisY = false;
+bool axisZ = false;
 
 int main(int argc,char**argv)
 {
@@ -111,6 +118,7 @@ if (!imageData) exit(1);
 
 void draw()
 {
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glEnable(GL_TEXTURE_2D);
 	GLuint floorTexture;
     glGenTextures(1,&floorTexture);
@@ -238,6 +246,7 @@ void camera()
 
 void keyboard(unsigned char key,int x,int y)
 {
+	//printf("%d\n", key);
     switch(key)
     {
     case 'W':
@@ -270,6 +279,36 @@ void keyboard(unsigned char key,int x,int y)
 	case ' ':
 		makeCube(camX,camY,camZ);
 	break;
+	case 9://TAB key down
+    	if (glutGetModifiers() & GLUT_ACTIVE_CTRL) { if (selectionIndex > 0) selectionIndex --; else selectionIndex = cubeCount - 1;} 
+    	else
+			selectionIndex ++;
+		if (selectionIndex >= cubeCount) selectionIndex = 0;
+	break;
+	case 'x':
+	case 'X':
+		if (!keys['x'] && !keys['X'])
+		{
+			keys[key] = true;
+			axisX = !axisX;	
+		}
+	break;
+	case 'y':
+	case 'Y':
+		if (!keys['y'] && !keys['Y'])
+		{
+			keys[key] = true;
+			axisY = !axisY;
+		}
+	break;
+	case 'z':
+	case 'Z':
+		if (!keys['z'] && !keys['Z'])
+		{
+			keys[key] = true;
+			axisZ = !axisZ;
+		}
+	break;
     }
 }
 void keyboard_up(unsigned char key,int x,int y)
@@ -300,10 +339,22 @@ void keyboard_up(unsigned char key,int x,int y)
     case 'q':
         motion.Down = false;
         break;
+	case 'x':
+	case 'X':
+	    keys[key] = false;
+	break;
+	case 'y':
+	case 'Y':
+	    keys[key] = false;
+	break;
+	case 'z':
+	case 'Z':
+	    keys[key] = false;
+	break;
     }
 }
 
-void makeCube(int16_t _x, int16_t _y, int16_t _z)
+void makeCube(float _x, float _y, float _z)
 {
 	newCube.x = _x; newCube.y = _y; newCube.z = _z;
 	cubes[cubeCount].x = newCube.x;
@@ -314,13 +365,14 @@ void makeCube(int16_t _x, int16_t _y, int16_t _z)
 
 void drawCubes()
 {
-	glEnable(GL_TEXTURE_2D);
 	for (uint16_t i = 0; i < cubeCount; i ++)
 	{
+		glEnable(GL_TEXTURE_2D);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glPushMatrix();
 		glTranslatef(cubes[i].x, cubes[i].y, cubes[i].z);
 
-    glBindTexture(GL_TEXTURE_2D,texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[imageCount].width, imageParams[imageCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -397,9 +449,61 @@ glTexCoord2f(1.0,1.0);
 glVertex3f(1.0f, -1.0f, 1.0f);
 glTexCoord2f(0.0,1.0);
 glVertex3f(1.0f, -1.0f, -1.0f);
+
 glEnd();  // End of drawing color-cube
 
-	glPopMatrix();
+
+
+		if (selectionIndex == i)
+		{
+			glDisable(GL_TEXTURE_2D);
+			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE);
+
+
+			glBegin(GL_QUADS);                // Begin draw	ing the color cube with 6 quads
+                                  // Top face (y = 1.0f)
+                                  // Define vertices in counter-clockwise (CCW) order with normal pointing out
+			glColor3f(1.0f, 1.0f, 1.0f);     // Green
+			glVertex3f(1.0f, 1.0f, -1.0f);
+			glVertex3f(-1.0f, 1.0f, -1.0f);
+			glVertex3f(-1.0f, 1.0f, 1.0f);
+			glVertex3f(1.0f, 1.0f, 1.0f);
+
+// Bottom face (y = -1.0f)
+			glVertex3f(1.0f, -1.0f, 1.0f);
+			glVertex3f(-1.0f, -1.0f, 1.0f);
+			glVertex3f(-1.0f, -1.0f, -1.0f);
+			glVertex3f(1.0f, -1.0f, -1.0f);
+
+// Front face  (z = 1.0f)
+			glVertex3f(1.0f, 1.0f, 1.0f);
+			glVertex3f(-1.0f, 1.0f, 1.0f);
+			glVertex3f(-1.0f, -1.0f, 1.0f);
+			glVertex3f(1.0f, -1.0f, 1.0f);
+
+// Back face (z = -1.0f)
+			glVertex3f(1.0f, -1.0f, -1.0f);
+			glVertex3f(-1.0f, -1.0f, -1.0f);
+			glVertex3f(-1.0f, 1.0f, -1.0f);
+			glVertex3f(1.0f, 1.0f, -1.0f);
+
+// Left face (x = -1.0f)
+			glVertex3f(-1.0f, 1.0f, 1.0f);
+			glVertex3f(-1.0f, 1.0f, -1.0f);
+			glVertex3f(-1.0f, -1.0f, -1.0f);
+			glVertex3f(-1.0f, -1.0f, 1.0f);
+
+// Right face (x = 1.0f)
+			glVertex3f(1.0f, 1.0f, -1.0f);
+			glVertex3f(1.0f, 1.0f, 1.0f);
+			glVertex3f(1.0f, -1.0f, 1.0f);
+			glVertex3f(1.0f, -1.0f, -1.0f);
+	
+			glEnd();  // End of drawing color-cube
+
+		}
+		glPopMatrix();
+
 	}
 	glColor3f(1.0f, 1.0f, 1.0f);
 }
