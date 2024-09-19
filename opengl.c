@@ -30,7 +30,13 @@ void camera();
 void keyboard(unsigned char key,int x,int y);
 void keyboard_up(unsigned char key,int x,int y);
 void drawText(float, float, char*);
+uint8_t editMode = 0;
 
+#define MODE_NORMAL		0x00
+#define MODE_SCALE		0x01
+#define MODE_MOVE		0x02
+#define MODE_ROTATE		0x03
+#define MODE_TEXTURE    0x04
 
 void drawStatus();
 struct Motion
@@ -53,7 +59,6 @@ struct imageParameters
 };
 
 unsigned char* imageData;
-uint16_t imageCount = 0;
 struct imageParameters imageParams[9999];
 
 
@@ -139,8 +144,8 @@ int main(int argc,char**argv)
 		for (uint16_t i = 1; i < filenamesCount + 1; i ++)
 		{
 			printf("%d %s\n",i, filenames[i]);
-			imageData = stbi_load(filenames[i], &imageParams[imageCount].width, &imageParams[imageCount].height, &imageParams[imageCount].nrChannels, 0);
 			textureCount ++;
+			imageData = stbi_load(filenames[i], &imageParams[textureCount].width, &imageParams[textureCount].height, &imageParams[textureCount].nrChannels, 0);
 			glGenTextures(1, &textures[textureCount]);
 
 			glBindTexture(GL_TEXTURE_2D, textures[textureCount]);
@@ -149,9 +154,9 @@ int main(int argc,char**argv)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			if (!imageData) {printf("Failed to load file %s\n", filenames[i]); exit(1);}
-			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, imageParams[imageCount].width, imageParams[imageCount].height, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, imageParams[textureCount].width, imageParams[textureCount].height, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 		
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[imageCount].width, imageParams[imageCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[textureCount].width, imageParams[textureCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 
 	//glActiveTexture(GL_TEXTURE0);
 //	glGenerateMipmap(GL_TEXTURE_2D);
@@ -299,7 +304,7 @@ void camera()
 
 void keyboard(unsigned char key,int x,int y)
 {
-	printf("%d\n", key);
+//	printf("%d\n", key);
     switch(key)
     {
     case 'W':
@@ -365,45 +370,97 @@ void keyboard(unsigned char key,int x,int y)
 		if (cubeCount > 0)
 		{
 			case '+':
-			if (axisX)
-			{
-				cubes[selectionIndex].w += 0.1f;
-			}
-			if (axisY)
-			{
-				cubes[selectionIndex].h += 0.1f;
-			}
-			if (axisZ)
-			{
-				cubes[selectionIndex].d += 0.1f;
-			}
+				switch(editMode)
+				{
+					case MODE_NORMAL:
 
+					break;
+					case MODE_SCALE:
+						if (axisX) cubes[selectionIndex].w += 0.1f;
+						if (axisY) cubes[selectionIndex].h += 0.1f;
+						if (axisZ) cubes[selectionIndex].d += 0.1f;
+					break;
+					case MODE_MOVE:
+						if (axisX) cubes[selectionIndex].x += 0.1f;
+						if (axisY) cubes[selectionIndex].y += 0.1f;
+						if (axisZ) cubes[selectionIndex].z += 0.1f;
+					break;
+					case MODE_ROTATE:
+						if (axisX) 
+						{
+							cubes[selectionIndex].rX += 0.1f;
+							if (cubes[selectionIndex].rX > 360.0f) cubes[selectionIndex].rX = 0.0f;
+						}
+						if (axisY)
+						{
+							cubes[selectionIndex].rY += 0.1f;
+							if (cubes[selectionIndex].rY > 360.0f) cubes[selectionIndex].rY = 0.0f;
+							
+						} 
+						if (axisZ)
+						{
+							cubes[selectionIndex].rZ += 0.1f;
+							if (cubes[selectionIndex].rZ > 360.0f) cubes[selectionIndex].rZ = 0.0f;
+						}
+					break;
+					case MODE_TEXTURE:
+						cubes[selectionIndex].image ++;
+						if (cubes[selectionIndex].image > (textureCount)) 
+							cubes[selectionIndex].image = 0;
+					break;
+				}
 			break;
 			case '-':
-			if (axisX)
-			{
-				cubes[selectionIndex].w -= 0.1f;
-			}
-			if (axisY)
-			{
-				cubes[selectionIndex].h -= 0.1f;
-			}
-			if (axisZ)
-			{
-				cubes[selectionIndex].d -= 0.1f;
-			}
+				switch(editMode)
+				{
+					case MODE_NORMAL:
 
-			break;
-			case '[':
-				cubes[selectionIndex].image ++;
-				if (cubes[selectionIndex].image > imageCount) cubes[selectionIndex].image = 1;
-			break;
-			case ']':
-				if (cubes[selectionIndex].image > 1) cubes[selectionIndex].image --; else cubes[selectionIndex].image = imageCount;
+					break;
+					case MODE_SCALE:
+						if (axisX) cubes[selectionIndex].w -= 0.1f;
+						if (axisY) cubes[selectionIndex].h -= 0.1f;
+						if (axisZ) cubes[selectionIndex].d -= 0.1f;
+					break;
+					case MODE_MOVE:
+						if (axisX) cubes[selectionIndex].x -= 0.1f;
+						if (axisY) cubes[selectionIndex].y -= 0.1f;
+						if (axisZ) cubes[selectionIndex].z -= 0.1f;
+					break;
+					case MODE_ROTATE:
+						if (axisX) 
+						{
+							cubes[selectionIndex].rX -= 0.1f;
+							if (cubes[selectionIndex].rX < 0.0f) cubes[selectionIndex].rX = 360.0f;
+						}
+						if (axisY)
+						{
+							cubes[selectionIndex].rY -= 0.1f;
+							if (cubes[selectionIndex].rY < 0.0f) cubes[selectionIndex].rY = 360.0f;
+							
+						} 
+						if (axisZ)
+						{
+							cubes[selectionIndex].rZ -= 0.1f;
+							if (cubes[selectionIndex].rZ < 0.0f) cubes[selectionIndex].rZ = 360.0f;
+						}
+					break;
+					case MODE_TEXTURE:
+						if (cubes[selectionIndex].image > 0) 
+							cubes[selectionIndex].image --; 
+						else 
+							cubes[selectionIndex].image = textureCount;
+					break;
+				}
 			break;
 		}
+		case 'm':
+		case 'M':
+			editMode ++;
+			if (editMode > MODE_TEXTURE) editMode = MODE_NORMAL;
+		break;
     }
 }
+
 void keyboard_up(unsigned char key,int x,int y)
 {
     switch(key)
@@ -645,6 +702,52 @@ void drawStatus()
 	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 	textIndex++;
 
+	memset(strLine, 0, 255);
+	memset(tmpstr, 0, 5);
+	sprintf(tmpstr, "AxisX %d", axisX);
+	strcat(strLine, tmpstr);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
+	memset(tmpstr, 0, 5);
+	sprintf(tmpstr, "AxisY %d", axisY);
+	strcat(strLine, tmpstr);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
+	memset(tmpstr, 0, 5);
+	sprintf(tmpstr, "AxisZ %d", axisZ);
+	strcat(strLine, tmpstr);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
+	switch (editMode)
+	{
+		case MODE_NORMAL:
+			strcpy(strLine, "MODE Normal");
+		break;
+		case MODE_SCALE:
+			strcpy(strLine, "MODE Scale");
+		break;
+		case MODE_MOVE:
+			strcpy(strLine, "MODE Move");
+		break;
+		case MODE_ROTATE:
+			strcpy(strLine, "MODE Rotate");
+		break;
+		case MODE_TEXTURE:
+			strcpy(strLine, "MODE Texture");
+		break;
+	}
+	memset(tmpstr, 0, 5);
+//	sprintf(tmpstr, "AxisZ %d", axisZ);
+	strcat(strLine, tmpstr);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+	
 	if (cubeCount > 0)
 	{
 		textIndex++;
