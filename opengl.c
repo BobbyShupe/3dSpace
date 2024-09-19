@@ -1,11 +1,16 @@
 //							gcc -o opengl opengl.c -lm -lGL -lGLU -lglut -lGLEW
-
+#define _OPEN_SYS_ITOA_EXT
 #include <GL/glew.h>
 #include <GL/glut.h>
 #include <math.h>
 #include <stdbool.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <dirent.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <GL/freeglut.h>
 
 #define FPS 60
 #define TO_RADIANS 3.14/180.0
@@ -24,7 +29,10 @@ void passive_motion(int,int);
 void camera();
 void keyboard(unsigned char key,int x,int y);
 void keyboard_up(unsigned char key,int x,int y);
+void drawText(float, float, char*);
 
+
+void drawStatus();
 struct Motion
 {
     bool Forward,Backward,Left,Right,Up,Down;
@@ -33,7 +41,8 @@ struct Motion
 struct cube
 {
 	float x,y,z,w,h,d,rX,rY,rZ;
-	uint16_t image;	
+	uint16_t image;
+	char imageFileName[32];
 };
 
 struct imageParameters
@@ -64,7 +73,8 @@ void init()
     glutWarpPointer(width/2,height/2);
 }
 
-unsigned int texture;
+unsigned int textures[9999];
+uint16_t textureCount = 0;
 
 uint16_t selectionIndex = 0;
 
@@ -78,8 +88,15 @@ bool scale = false;
 bool move = false;
 bool rotate = false;
 
+char* filenames[9999];
+uint16_t filenamesCount = 0;
+char* str;
+char* tmpstr;
+char strLine[255];
+
 int main(int argc,char**argv)
 {
+	str = (char*) malloc(sizeof(char) * 4);
 	cubes = (struct cube*) malloc(sizeof(struct cube) * 10000);
     glutInit(&argc,argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
@@ -94,24 +111,55 @@ int main(int argc,char**argv)
     glutKeyboardFunc(keyboard);
     glutKeyboardUpFunc(keyboard_up);
 
+	DIR *d;
+	struct dirent *dir;
+	d = opendir(".");
+	if (d)
+	{
+		while ((dir = readdir(d)) != NULL)
+		{
+			if (dir->d_type == DT_REG && strlen(dir->d_name) > 4)
+			{
+				memset(str, 0, 4);
+				memcpy(str, &dir->d_name[strlen(dir->d_name) - 4], 4);
+				if (!strcmp(str, ".jpg") || !strcmp(str, ".JPG"))
+				{
+					filenamesCount++;
+					filenames[filenamesCount] = (char*)malloc(sizeof(char) * strlen(dir->d_name));
+					memset(filenames[filenamesCount], 0, strlen(dir->d_name));
+					strcpy(filenames[filenamesCount], dir->d_name);
+//					printf("%s\n", filenames[filenamesCount]);
+				}				
+			}
+		}
+		closedir(d);
+	}
+	if (filenamesCount > 0)
+	{
+		for (uint16_t i = 1; i < filenamesCount + 1; i ++)
+		{
+			printf("%d %s\n",i, filenames[i]);
+			imageData = stbi_load(filenames[i], &imageParams[imageCount].width, &imageParams[imageCount].height, &imageParams[imageCount].nrChannels, 0);
+			textureCount ++;
+			glGenTextures(1, &textures[textureCount]);
 
-	imageData = stbi_load("17-09-2024PVL.jpg", &imageParams[imageCount].width, &imageParams[imageCount].height, &imageParams[imageCount].nrChannels, 0);
-	glGenTextures(1, &texture);
-
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-if (!imageData) exit(1);
-	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, imageParams[imageCount].width, imageParams[imageCount].height, GL_RGB, GL_UNSIGNED_BYTE, imageData);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[imageCount].width, imageParams[imageCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+			glBindTexture(GL_TEXTURE_2D, textures[textureCount]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			if (!imageData) {printf("Failed to load file %s\n", filenames[i]); exit(1);}
+			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, imageParams[imageCount].width, imageParams[imageCount].height, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+		
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[imageCount].width, imageParams[imageCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 
 	//glActiveTexture(GL_TEXTURE0);
 //	glGenerateMipmap(GL_TEXTURE_2D);
 
-	stbi_image_free(imageData);
+			stbi_image_free(imageData);			
+		}
+	}
+
     glutMainLoop();
     return 0;
 }
@@ -163,6 +211,7 @@ void display()
     draw();
 
     drawCubes();
+    drawStatus();
 
     glutSwapBuffers();
 }
@@ -345,7 +394,13 @@ void keyboard(unsigned char key,int x,int y)
 			}
 
 			break;
-	
+			case '[':
+				cubes[selectionIndex].image ++;
+				if (cubes[selectionIndex].image > imageCount) cubes[selectionIndex].image = 1;
+			break;
+			case ']':
+				if (cubes[selectionIndex].image > 1) cubes[selectionIndex].image --; else cubes[selectionIndex].image = imageCount;
+			break;
 		}
     }
 }
@@ -413,7 +468,7 @@ void drawCubes()
 		glPushMatrix();
 		glTranslatef(cubes[i].x, cubes[i].y, cubes[i].z);
 
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, textures[cubes[i].image]);
 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[imageCount].width, imageParams[imageCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -547,4 +602,109 @@ glEnd();  // End of drawing color-cube
 
 	}
 	glColor3f(1.0f, 1.0f, 1.0f);
+}
+
+void drawText(float _x, float _y, char* text)
+{
+	glDisable(GL_TEXTURE_2D);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0.0, glutGet(GLUT_WINDOW_WIDTH), 0.0, glutGet(GLUT_WINDOW_HEIGHT));
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glRasterPos2f(_x, _y);
+	glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)text);
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	glEnable(GL_TEXTURE_2D);
+}
+
+uint8_t textIndex;
+void drawStatus()
+{
+	textIndex = 1;
+	glColor3f(0.2f, 0.8f,0.2f);
+	tmpstr = (char*)malloc(sizeof(char) * 5);
+	memset(strLine, 0, 255);
+	strcpy(strLine, "Cube Count ");
+	memset(tmpstr, 0, 5);
+	sprintf(tmpstr, "%d", cubeCount);
+	strcat(strLine, tmpstr);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
+	strcpy(strLine, "Texture Count ");
+	memset(tmpstr, 0, 5);
+	sprintf(tmpstr, "%d", textureCount);
+	strcat(strLine, tmpstr);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	if (cubeCount > 0)
+	{
+		textIndex++;
+		memset(strLine, 0, 255);
+		memset(tmpstr, 0, 5);
+		sprintf(tmpstr, "Selected Cube %d", selectionIndex);
+		strcpy(strLine, tmpstr);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+
+		memset(strLine, 0, 255);
+		memset(tmpstr, 0, 5);
+		sprintf(tmpstr, "	X %f", cubes[selectionIndex].x);
+		strcpy(strLine, tmpstr);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+
+		memset(strLine, 0, 255);
+		memset(tmpstr, 0, 5);
+		sprintf(tmpstr, "	Y %f", cubes[selectionIndex].y);
+		strcpy(strLine, tmpstr);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+
+		memset(strLine, 0, 255);
+		memset(tmpstr, 0, 5);
+		sprintf(tmpstr, "	Z %f", cubes[selectionIndex].z);
+		strcpy(strLine, tmpstr);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+
+		memset(strLine, 0, 255);
+		memset(tmpstr, 0, 5);
+		sprintf(tmpstr, "	W %f", cubes[selectionIndex].w);
+		strcpy(strLine, tmpstr);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+
+		memset(strLine, 0, 255);
+		memset(tmpstr, 0, 5);
+		sprintf(tmpstr, "	H %f", cubes[selectionIndex].h);
+		strcpy(strLine, tmpstr);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+
+		memset(strLine, 0, 255);
+		memset(tmpstr, 0, 5);
+		sprintf(tmpstr, "	D %f", cubes[selectionIndex].d);
+		strcpy(strLine, tmpstr);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+
+		memset(strLine, 0, 255);
+		memset(tmpstr, 0, 5);
+		sprintf(tmpstr, "	Texture %d", cubes[selectionIndex].image);
+		strcpy(strLine, tmpstr);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+
+
+	}
+	glColor3f(1.0f, 1.0f, 1.0f);	
 }
