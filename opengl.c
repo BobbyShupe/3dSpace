@@ -4,13 +4,15 @@
 #include <GL/glut.h>
 #include <math.h>
 #include <stdbool.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <GL/freeglut.h>
+#include <sys/stat.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #define FPS 60
 #define TO_RADIANS 3.14/180.0
@@ -134,6 +136,7 @@ int main(int argc,char**argv)
     glutKeyboardFunc(keyboard);
     glutKeyboardUpFunc(keyboard_up);
 
+
 	DIR *d;
 	struct dirent *dir;
 	d = opendir(".");
@@ -145,7 +148,9 @@ int main(int argc,char**argv)
 			{
 				memset(str, 0, 4);
 				memcpy(str, &dir->d_name[strlen(dir->d_name) - 4], 4);
-				if (!strcmp(str, ".jpg") || !strcmp(str, ".JPG") || !strcmp(str, ".png") || !strcmp(str, ".PNG"))
+				if (!strcmp(str, ".jpg") || !strcmp(str, ".JPG") 
+				|| !strcmp(str, ".png") || !strcmp(str, ".PNG")
+				|| !strcmp(str, ".bmp") || !strcmp(str, ".BMP"))
 				{
 					filenames[filenamesCount] = (char*)malloc(sizeof(char) * strlen(dir->d_name));
 					memset(filenames[filenamesCount], 0, strlen(dir->d_name));
@@ -159,11 +164,14 @@ int main(int argc,char**argv)
 	}
 	if (filenamesCount > 0)
 	{
+		struct stat file_status;
 		for (uint16_t i = 0; i < (filenamesCount); i ++)
 		{
 			printf("%d %s\n",i, filenames[i]);
 			textureCount ++;
-			imageData = stbi_load(filenames[i], &imageParams[textureCount].width, &imageParams[textureCount].height, &imageParams[textureCount].nrChannels, 0);
+			stat(filenames[i], &file_status);
+			imageData = (unsigned char*) malloc(sizeof(char) * file_status.st_size);
+			imageData = stbi_load(filenames[i], &imageParams[textureCount].width, &imageParams[textureCount].height, &imageParams[textureCount].nrChannels, STBI_rgb);
 			glGenTextures(1, &textures[textureCount]);
 			
 			glBindTexture(GL_TEXTURE_2D, textures[textureCount]);
@@ -323,7 +331,7 @@ void camera()
 
 void keyboard(unsigned char key,int x,int y)
 {
-	printf("%d\n", key);
+//	printf("%d\n", key);
     switch(key)
     {
     case 'W':
@@ -681,7 +689,7 @@ glEnd();  // End of drawing color-cube
 			glBegin(GL_QUADS);                // Begin draw	ing the color cube with 6 quads
                                   // Top face (y = 1.0f)
                                   // Define vertices in counter-clockwise (CCW) order with normal pointing out
-			glColor3f(1.0f, 1.0f, 1.0f);     // Green
+			glColor3f(0.33f, 1.0f, 0.0f);     // Green
 			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
 			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
 			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
