@@ -31,12 +31,25 @@ void keyboard(unsigned char key,int x,int y);
 void keyboard_up(unsigned char key,int x,int y);
 void drawText(float, float, char*);
 uint8_t editMode = 0;
+uint8_t editSubMode = 0;
 
-#define MODE_NORMAL		0x00
-#define MODE_SCALE		0x01
-#define MODE_MOVE		0x02
-#define MODE_ROTATE		0x03
-#define MODE_TEXTURE    0x04
+#define MODE_NORMAL			0x00
+#define MODE_SCALE			0x01
+#define MODE_MOVE			0x02
+#define MODE_ROTATE			0x03
+#define MODE_TEXTURE    	0x04
+#define MODE_TEXTURECOORDS  0X05
+#define MODE_MAX			0x05
+
+#define MODE_SUBMODE_01		0x00
+#define MODE_SUBMODE_02		0x01
+#define MODE_SUBMODE_03		0x02
+#define MODE_SUBMODE_04		0x03
+#define MODE_SUBMODE_05		0x04
+#define MODE_SUBMODE_06		0x05
+#define MODE_SUBMODE_07		0x06
+#define MODE_SUBMODE_08		0x07
+#define MODE_SUBMODE_MAX	0x07
 
 void drawStatus();
 struct Motion
@@ -49,6 +62,7 @@ struct cube
 	float x,y,z,w,h,d,rX,rY,rZ;
 	uint16_t image;
 	char imageFileName[32];
+	float textureCoords[9];
 };
 
 struct imageParameters
@@ -93,14 +107,18 @@ bool scale = false;
 bool move = false;
 bool rotate = false;
 
+bool drawInfo = true;
+
 char* filenames[9999];
 uint16_t filenamesCount = 0;
 char* str;
 char* tmpstr;
-char strLine[255];
+char* strLine;
 
 int main(int argc,char**argv)
 {
+	tmpstr = (char*)malloc(sizeof(char) * 5);
+	strLine = (char*)malloc(sizeof(char) * 255);
 	str = (char*) malloc(sizeof(char) * 4);
 	cubes = (struct cube*) malloc(sizeof(struct cube) * 10000);
     glutInit(&argc,argv);
@@ -127,13 +145,13 @@ int main(int argc,char**argv)
 			{
 				memset(str, 0, 4);
 				memcpy(str, &dir->d_name[strlen(dir->d_name) - 4], 4);
-				if (!strcmp(str, ".jpg") || !strcmp(str, ".JPG"))
+				if (!strcmp(str, ".jpg") || !strcmp(str, ".JPG") || !strcmp(str, ".png") || !strcmp(str, ".PNG"))
 				{
-					filenamesCount++;
 					filenames[filenamesCount] = (char*)malloc(sizeof(char) * strlen(dir->d_name));
 					memset(filenames[filenamesCount], 0, strlen(dir->d_name));
 					strcpy(filenames[filenamesCount], dir->d_name);
 //					printf("%s\n", filenames[filenamesCount]);
+					filenamesCount++;
 				}				
 			}
 		}
@@ -141,13 +159,13 @@ int main(int argc,char**argv)
 	}
 	if (filenamesCount > 0)
 	{
-		for (uint16_t i = 1; i < filenamesCount + 1; i ++)
+		for (uint16_t i = 0; i < (filenamesCount); i ++)
 		{
 			printf("%d %s\n",i, filenames[i]);
 			textureCount ++;
 			imageData = stbi_load(filenames[i], &imageParams[textureCount].width, &imageParams[textureCount].height, &imageParams[textureCount].nrChannels, 0);
 			glGenTextures(1, &textures[textureCount]);
-
+			
 			glBindTexture(GL_TEXTURE_2D, textures[textureCount]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -158,10 +176,11 @@ int main(int argc,char**argv)
 		
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[textureCount].width, imageParams[textureCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 
-	//glActiveTexture(GL_TEXTURE0);
-//	glGenerateMipmap(GL_TEXTURE_2D);
-
 			stbi_image_free(imageData);			
+
+	//glActiveTexture(GL_TEXTURE0);
+	//	glGenerateMipmap(GL_TEXTURE_2D);
+
 		}
 	}
 
@@ -216,7 +235,7 @@ void display()
     draw();
 
     drawCubes();
-    drawStatus();
+    if (drawInfo) drawStatus();
 
     glutSwapBuffers();
 }
@@ -304,7 +323,7 @@ void camera()
 
 void keyboard(unsigned char key,int x,int y)
 {
-//	printf("%d\n", key);
+	printf("%d\n", key);
     switch(key)
     {
     case 'W':
@@ -370,6 +389,7 @@ void keyboard(unsigned char key,int x,int y)
 		if (cubeCount > 0)
 		{
 			case '+':
+			case '=':
 				switch(editMode)
 				{
 					case MODE_NORMAL:
@@ -405,8 +425,13 @@ void keyboard(unsigned char key,int x,int y)
 					break;
 					case MODE_TEXTURE:
 						cubes[selectionIndex].image ++;
-						if (cubes[selectionIndex].image > (textureCount)) 
+						if (cubes[selectionIndex].image == (textureCount + 1)) 
 							cubes[selectionIndex].image = 0;
+					break;
+					case MODE_TEXTURECOORDS:
+						cubes[selectionIndex].textureCoords[editSubMode] += 0.1f;
+						if (cubes[selectionIndex].textureCoords[editSubMode] > 1.0f)
+							cubes[selectionIndex].textureCoords[editSubMode] = 0.0f;
 					break;
 				}
 			break;
@@ -450,13 +475,32 @@ void keyboard(unsigned char key,int x,int y)
 						else 
 							cubes[selectionIndex].image = textureCount;
 					break;
+					case MODE_TEXTURECOORDS:
+						cubes[selectionIndex].textureCoords[editSubMode] -= 0.1f;
+						if (cubes[selectionIndex].textureCoords[editSubMode] < 0.0f)
+							cubes[selectionIndex].textureCoords[editSubMode] = 1.0f;
+					break;
 				}
 			break;
 		}
 		case 'm':
 		case 'M':
-			editMode ++;
-			if (editMode > MODE_TEXTURE) editMode = MODE_NORMAL;
+	    	if (glutGetModifiers() & GLUT_ACTIVE_ALT)
+	    	{
+	    		if (editMode == MODE_TEXTURECOORDS)
+	    		{
+		    		editSubMode ++;
+		    		if (editSubMode > MODE_SUBMODE_MAX) editSubMode = 0;
+	    		}
+	    	} else 
+			{
+		    	editMode ++;
+				if (editMode > MODE_MAX) editMode = MODE_NORMAL;
+			}
+		break;
+		case 'i':
+		case 'I':
+	    	if (glutGetModifiers() & GLUT_ACTIVE_ALT) drawInfo = !drawInfo;
 		break;
     }
 }
@@ -513,6 +557,15 @@ void makeCube(float _x, float _y, float _z)
 	cubes[cubeCount].w = 0.75f;
 	cubes[cubeCount].h = 2.0f;
 	cubes[cubeCount].d = 0.02f;
+	cubes[cubeCount].textureCoords[0] = 1.0f;
+	cubes[cubeCount].textureCoords[1] = 0.0f;
+	cubes[cubeCount].textureCoords[2] = 0.0f;
+	cubes[cubeCount].textureCoords[3] = 0.0f;
+	cubes[cubeCount].textureCoords[4] = 0.0f;
+	cubes[cubeCount].textureCoords[5] = 1.0f;
+	cubes[cubeCount].textureCoords[6] = 1.0f;
+	cubes[cubeCount].textureCoords[7] = 1.0f;
+
 	cubeCount ++;
 }
 
@@ -528,8 +581,8 @@ void drawCubes()
     glBindTexture(GL_TEXTURE_2D, textures[cubes[i].image]);
 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[imageCount].width, imageParams[imageCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
                     GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
@@ -547,7 +600,6 @@ glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 
 glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
 //glTexCoord2f(0.0,1.0);
 glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
-
 // Bottom face (y = -1.0f)
 glColor3ub(255, 255, 255);     // Orange
 //glTexCoord2f(1.0,0.0);
@@ -560,6 +612,7 @@ glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d *
 glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
 
 // Front face  (z = 1.0f)
+/*
 glColor3f(1.0f, 1.0f, 1.0f);     // Red
 glTexCoord2f(1.0,0.0);
 glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
@@ -569,6 +622,18 @@ glTexCoord2f(0.0,1.0);
 glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
 glTexCoord2f(1.0,1.0);
 glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
+*/
+
+glColor3f(1.0f, 1.0f, 1.0f);     // Red
+glTexCoord2f(cubes[i].textureCoords[0],cubes[i].textureCoords[1]);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
+glTexCoord2f(cubes[i].textureCoords[2],cubes[i].textureCoords[3]);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
+glTexCoord2f(cubes[i].textureCoords[4],cubes[i].textureCoords[5]);
+glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
+glTexCoord2f(cubes[i].textureCoords[6],cubes[i].textureCoords[7]);
+glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
+
 
 // Back face (z = -1.0f)
 glColor3ub(255, 255, 255);     // Yellow
@@ -685,7 +750,6 @@ void drawStatus()
 {
 	textIndex = 1;
 	glColor3f(0.2f, 0.8f,0.2f);
-	tmpstr = (char*)malloc(sizeof(char) * 5);
 	memset(strLine, 0, 255);
 	strcpy(strLine, "Cube Count ");
 	memset(tmpstr, 0, 5);
@@ -740,6 +804,9 @@ void drawStatus()
 		break;
 		case MODE_TEXTURE:
 			strcpy(strLine, "MODE Texture");
+		break;
+		case MODE_TEXTURECOORDS:
+			strcpy(strLine, "MODE Texture Coords");
 		break;
 	}
 	memset(tmpstr, 0, 5);
@@ -807,7 +874,22 @@ void drawStatus()
 		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 		textIndex++;
 
+		if (editMode == MODE_TEXTURECOORDS)
+		{
 
+			for (uint8_t i = 0; i < 8; i ++)
+			{
+				memset(strLine, 0, 255);
+				memset(tmpstr, 0, 5);
+				if (i == editSubMode)
+					sprintf(tmpstr, "->Texture Coordinate %d: %.1f", i, cubes[selectionIndex].textureCoords[i]);
+				else
+					sprintf(tmpstr, " 	   Texture Coordinate %d: %.1f", i, cubes[selectionIndex].textureCoords[i]);
+				strcpy(strLine, tmpstr);
+				drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+				textIndex++;			
+			}			
+		}
 	}
 	glColor3f(1.0f, 1.0f, 1.0f);	
 }
