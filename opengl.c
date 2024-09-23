@@ -117,6 +117,11 @@ char* str;
 char* tmpstr;
 char* strLine;
 
+void saveData();
+void loadData();
+
+bool exiting = false;
+
 int main(int argc,char**argv)
 {
 	tmpstr = (char*)malloc(sizeof(char) * 5);
@@ -191,7 +196,7 @@ int main(int argc,char**argv)
 
 		}
 	}
-
+	loadData();
     glutMainLoop();
     return 0;
 }
@@ -359,7 +364,7 @@ void keyboard(unsigned char key,int x,int y)
         motion.Down = true;
         break;
 	case 27:
-		exit(1);
+		exiting = true;
 	break;
 	case ' ':
 		makeCube(camX,camY,camZ);
@@ -513,6 +518,12 @@ void keyboard(unsigned char key,int x,int y)
 		case 'I':
 	    	if (glutGetModifiers() & GLUT_ACTIVE_ALT) drawInfo = !drawInfo;
 		break;
+    }
+
+    if (exiting)
+    {
+    	saveData();
+    	exit(1);
     }
 }
 
@@ -882,4 +893,100 @@ void drawStatus()
 		}
 	}
 	glColor3f(1.0f, 1.0f, 1.0f);	
+}
+
+void saveData()
+{
+	FILE* file = fopen("cubes.dat", "wb");
+	if (file == NULL)
+	{
+		printf("Error opening file to save data.");
+	}
+	size_t numWritten;
+	fwrite(&cubeCount, sizeof(uint16_t), 1, file);
+
+	for (uint16_t i = 0; i < cubeCount; i ++)
+	{
+	
+		numWritten = fwrite(&cubes[i].x, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		numWritten = fwrite(&cubes[i].y, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		numWritten = fwrite(&cubes[i].z, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		numWritten = fwrite(&cubes[i].w, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		numWritten = fwrite(&cubes[i].h, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		numWritten = fwrite(&cubes[i].d, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		numWritten = fwrite(&cubes[i].rX, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		numWritten = fwrite(&cubes[i].rY, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		numWritten = fwrite(&cubes[i].rZ, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		printf("\n");
+		numWritten = fwrite(&cubes[i].image, sizeof(uint16_t), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		numWritten = fwrite(cubes[i].imageFileName, 64, 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		printf("\n");
+		for (uint8_t ii = 0; ii < 8; ii ++)
+		{
+			numWritten = fwrite(&cubes[i].textureCoords[ii], sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+		}
+	}
+
+//	fwrite(&cubes, sizeof(struct cube), cubeCount, file);
+
+	fclose(file);
+
+	printf("struct cube size = %d\n", (int)sizeof(struct cube));
+	printf("Cube count = %d\n", cubeCount);
+	printf("Wrote %d bytes\n",(int)sizeof(numWritten));
+}
+
+void loadData()
+{
+	FILE* file = fopen("cubes.dat", "rb");
+		if (file == NULL)
+	{
+		printf("Error opening file to save data.");
+	}
+	if (file != NULL)
+	{
+		//fread(&cubes[0], sizeof(struct cube), cubeCount, file);	 
+		fread(&cubeCount, sizeof(uint16_t), 1, file);
+		for (uint16_t i = 0; i < cubeCount; i ++)
+		{
+			fread(&cubes[i].x, sizeof(float), 1, file);
+			fread(&cubes[i].y, sizeof(float), 1, file);
+			fread(&cubes[i].z, sizeof(float), 1, file);
+			fread(&cubes[i].w, sizeof(float), 1, file);
+			fread(&cubes[i].h, sizeof(float), 1, file);
+			fread(&cubes[i].d, sizeof(float), 1, file);
+			fread(&cubes[i].rX, sizeof(float), 1, file);
+			fread(&cubes[i].rY, sizeof(float), 1, file);
+			fread(&cubes[i].rZ, sizeof(float), 1, file);
+
+			fread(&cubes[i].image, sizeof(uint16_t), 1, file);
+			fread(cubes[i].imageFileName, 64, 1, file);
+			for (uint8_t ii = 0; ii < 8; ii ++)
+			{
+				fread(&cubes[i].textureCoords[ii], sizeof(float), 1, file);
+			}
+
+		}
+
+		for (uint16_t i = 0; i < cubeCount; i ++)
+		{
+			printf("%d\n", i);
+			printf("x %f\n", cubes[i].x);
+			printf("y %f\n", cubes[i].y);
+			printf("z %f\n", cubes[i].z);
+			printf("w %f\n", cubes[i].w);
+			printf("h %f\n", cubes[i].h);
+			printf("d %f\n", cubes[i].d);
+			printf("rX %f\n", cubes[i].rX);
+			printf("rY %f\n", cubes[i].rY);
+			printf("rZ %f\n", cubes[i].rZ);
+
+			printf("%s\n", cubes[i].imageFileName);
+			for (uint8_t ii = 0; ii < 8; ii++)
+			{
+				printf(" texCoord[%d] %f\n", ii, cubes[i].textureCoords[ii]);
+			}	
+		}	
+	fclose(file);
+	}
 }
