@@ -63,7 +63,7 @@ struct cube
 {
 	float x,y,z,w,h,d,rX,rY,rZ;
 	uint16_t image;
-	char imageFileName[32];
+	char imageFileName[64];
 	float textureCoords[9];
 };
 
@@ -167,8 +167,7 @@ int main(int argc,char**argv)
 		struct stat file_status;
 		for (uint16_t i = 0; i < (filenamesCount); i ++)
 		{
-			printf("%d %s\n",i, filenames[i]);
-			textureCount ++;
+			printf("%d found %s\n",i, filenames[i]);
 			stat(filenames[i], &file_status);
 			imageData = (unsigned char*) malloc(sizeof(char) * file_status.st_size);
 			imageData = stbi_load(filenames[i], &imageParams[textureCount].width, &imageParams[textureCount].height, &imageParams[textureCount].nrChannels, STBI_rgb);
@@ -183,6 +182,7 @@ int main(int argc,char**argv)
 			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, imageParams[textureCount].width, imageParams[textureCount].height, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 		
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[textureCount].width, imageParams[textureCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+			textureCount ++;
 
 			stbi_image_free(imageData);			
 
@@ -433,8 +433,9 @@ void keyboard(unsigned char key,int x,int y)
 					break;
 					case MODE_TEXTURE:
 						cubes[selectionIndex].image ++;
-						if (cubes[selectionIndex].image == (textureCount + 1)) 
+						if (cubes[selectionIndex].image == (textureCount)) 
 							cubes[selectionIndex].image = 0;
+						strcpy(cubes[selectionIndex].imageFileName, filenames[cubes[selectionIndex].image]);
 					break;
 					case MODE_TEXTURECOORDS:
 						cubes[selectionIndex].textureCoords[editSubMode] += 0.1f;
@@ -482,6 +483,8 @@ void keyboard(unsigned char key,int x,int y)
 							cubes[selectionIndex].image --; 
 						else 
 							cubes[selectionIndex].image = textureCount;
+						memset(cubes[selectionIndex].imageFileName, 0, 64);	
+						strcpy(cubes[selectionIndex].imageFileName, filenames[cubes[selectionIndex].image]);
 					break;
 					case MODE_TEXTURECOORDS:
 						cubes[selectionIndex].textureCoords[editSubMode] -= 0.1f;
@@ -573,8 +576,12 @@ void makeCube(float _x, float _y, float _z)
 	cubes[cubeCount].textureCoords[5] = 1.0f;
 	cubes[cubeCount].textureCoords[6] = 1.0f;
 	cubes[cubeCount].textureCoords[7] = 1.0f;
-
+	cubes[cubeCount].image = 0;
+	memset(cubes[cubeCount].imageFileName, 0, 64);
+	if (textureCount > 0)
+		strcpy(cubes[cubeCount].imageFileName, filenames[cubes[cubeCount].image]);
 	cubeCount ++;
+	
 }
 
 void drawCubes()
@@ -759,39 +766,27 @@ void drawStatus()
 	textIndex = 1;
 	glColor3f(0.2f, 0.8f,0.2f);
 	memset(strLine, 0, 255);
-	strcpy(strLine, "Cube Count ");
-	memset(tmpstr, 0, 5);
-	sprintf(tmpstr, "%d", cubeCount);
-	strcat(strLine, tmpstr);
+	sprintf(strLine, "Cube Count %d", cubeCount);
 	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 	textIndex++;
 
 	memset(strLine, 0, 255);
-	strcpy(strLine, "Texture Count ");
-	memset(tmpstr, 0, 5);
-	sprintf(tmpstr, "%d", textureCount);
-	strcat(strLine, tmpstr);
+	sprintf(strLine, "Texture Count %d", textureCount);
 	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 	textIndex++;
 
 	memset(strLine, 0, 255);
-	memset(tmpstr, 0, 5);
-	sprintf(tmpstr, "AxisX %d", axisX);
-	strcat(strLine, tmpstr);
+	sprintf(strLine, "AxisX %d", axisX);
 	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 	textIndex++;
 
 	memset(strLine, 0, 255);
-	memset(tmpstr, 0, 5);
-	sprintf(tmpstr, "AxisY %d", axisY);
-	strcat(strLine, tmpstr);
+	sprintf(strLine, "AxisY %d", axisY);
 	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 	textIndex++;
 
 	memset(strLine, 0, 255);
-	memset(tmpstr, 0, 5);
-	sprintf(tmpstr, "AxisZ %d", axisZ);
-	strcat(strLine, tmpstr);
+	sprintf(strLine, "AxisZ %d", axisZ);
 	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 	textIndex++;
 
@@ -817,9 +812,9 @@ void drawStatus()
 			strcpy(strLine, "MODE Texture Coords");
 		break;
 	}
-	memset(tmpstr, 0, 5);
+	//memset(tmpstr, 0, 5);
 //	sprintf(tmpstr, "AxisZ %d", axisZ);
-	strcat(strLine, tmpstr);
+	//strcat(strLine, tmpstr);
 	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 	textIndex++;
 	
@@ -827,73 +822,60 @@ void drawStatus()
 	{
 		textIndex++;
 		memset(strLine, 0, 255);
-		memset(tmpstr, 0, 5);
-		sprintf(tmpstr, "Selected Cube %d", selectionIndex);
-		strcpy(strLine, tmpstr);
+		sprintf(strLine, "Selected Cube %d", selectionIndex);
 		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 		textIndex++;
 
 		memset(strLine, 0, 255);
-		memset(tmpstr, 0, 5);
-		sprintf(tmpstr, "	X %f", cubes[selectionIndex].x);
-		strcpy(strLine, tmpstr);
+		sprintf(strLine, "	X %f", cubes[selectionIndex].x);
 		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 		textIndex++;
 
 		memset(strLine, 0, 255);
-		memset(tmpstr, 0, 5);
-		sprintf(tmpstr, "	Y %f", cubes[selectionIndex].y);
-		strcpy(strLine, tmpstr);
+		sprintf(strLine, "	Y %f", cubes[selectionIndex].y);
 		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 		textIndex++;
 
 		memset(strLine, 0, 255);
-		memset(tmpstr, 0, 5);
-		sprintf(tmpstr, "	Z %f", cubes[selectionIndex].z);
-		strcpy(strLine, tmpstr);
+		sprintf(strLine, "	Z %f", cubes[selectionIndex].z);
 		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 		textIndex++;
 
 		memset(strLine, 0, 255);
-		memset(tmpstr, 0, 5);
-		sprintf(tmpstr, "	W %f", cubes[selectionIndex].w);
-		strcpy(strLine, tmpstr);
+		sprintf(strLine, "	W %f", cubes[selectionIndex].w);
 		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 		textIndex++;
 
 		memset(strLine, 0, 255);
-		memset(tmpstr, 0, 5);
-		sprintf(tmpstr, "	H %f", cubes[selectionIndex].h);
-		strcpy(strLine, tmpstr);
+		sprintf(strLine, "	H %f", cubes[selectionIndex].h);
 		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 		textIndex++;
 
 		memset(strLine, 0, 255);
-		memset(tmpstr, 0, 5);
-		sprintf(tmpstr, "	D %f", cubes[selectionIndex].d);
-		strcpy(strLine, tmpstr);
+		sprintf(strLine, "	D %f", cubes[selectionIndex].d);
 		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 		textIndex++;
 
 		memset(strLine, 0, 255);
-		memset(tmpstr, 0, 5);
-		sprintf(tmpstr, "	Texture %d", cubes[selectionIndex].image);
-		strcpy(strLine, tmpstr);
+		sprintf(strLine, "	Texture %d", cubes[selectionIndex].image);
 		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 		textIndex++;
 
+		memset(strLine, 0, 255);
+		sprintf(strLine, "	image filename %s", cubes[selectionIndex].imageFileName);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+		
 		if (editMode == MODE_TEXTURECOORDS)
 		{
 
 			for (uint8_t i = 0; i < 8; i ++)
 			{
 				memset(strLine, 0, 255);
-				memset(tmpstr, 0, 5);
 				if (i == editSubMode)
-					sprintf(tmpstr, "->Texture Coordinate %d: %.1f", i, cubes[selectionIndex].textureCoords[i]);
+					sprintf(strLine, "->Texture Coordinate %d: %.1f", i, cubes[selectionIndex].textureCoords[i]);
 				else
-					sprintf(tmpstr, " 	   Texture Coordinate %d: %.1f", i, cubes[selectionIndex].textureCoords[i]);
-				strcpy(strLine, tmpstr);
+					sprintf(strLine, " 	   Texture Coordinate %d: %.1f", i, cubes[selectionIndex].textureCoords[i]);
 				drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 				textIndex++;			
 			}			
