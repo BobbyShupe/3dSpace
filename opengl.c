@@ -1,4 +1,4 @@
-//							gcc -o opengl opengl.c -lm -lGL -lGLU -lglut -lGLEW
+//									gcc -o opengl opengl.c -lm -lGL -lGLU -lglut -lGLEW
 #define _OPEN_SYS_ITOA_EXT
 #include <GL/glew.h>
 #include <GL/glut.h>
@@ -160,7 +160,7 @@ int main(int argc,char**argv)
 					filenames[filenamesCount] = (char*)malloc(sizeof(char) * strlen(dir->d_name));
 					memset(filenames[filenamesCount], 0, strlen(dir->d_name));
 					strcpy(filenames[filenamesCount], dir->d_name);
-//					printf("%s\n", filenames[filenamesCount]);
+					//printf("%d %s\n",filenamesCount, filenames[filenamesCount]);
 					filenamesCount++;
 				}				
 			}
@@ -484,11 +484,13 @@ void keyboard(unsigned char key,int x,int y)
 						}
 					break;
 					case MODE_TEXTURE:
-						if (cubes[selectionIndex].image > 0) 
-							cubes[selectionIndex].image --; 
-						else 
-							cubes[selectionIndex].image = textureCount;
-						memset(cubes[selectionIndex].imageFileName, 0, 64);	
+
+						if (cubes[selectionIndex].image > 0)
+							cubes[selectionIndex].image --;
+						else
+							cubes[selectionIndex].image = textureCount - 1;
+
+						memset(cubes[selectionIndex].imageFileName, 0, 64);
 						strcpy(cubes[selectionIndex].imageFileName, filenames[cubes[selectionIndex].image]);
 					break;
 					case MODE_TEXTURECOORDS:
@@ -908,22 +910,20 @@ void saveData()
 	for (uint16_t i = 0; i < cubeCount; i ++)
 	{
 	
-		numWritten = fwrite(&cubes[i].x, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
-		numWritten = fwrite(&cubes[i].y, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
-		numWritten = fwrite(&cubes[i].z, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
-		numWritten = fwrite(&cubes[i].w, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
-		numWritten = fwrite(&cubes[i].h, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
-		numWritten = fwrite(&cubes[i].d, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
-		numWritten = fwrite(&cubes[i].rX, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
-		numWritten = fwrite(&cubes[i].rY, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
-		numWritten = fwrite(&cubes[i].rZ, sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
-		printf("\n");
-		numWritten = fwrite(&cubes[i].image, sizeof(uint16_t), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
-		numWritten = fwrite(cubes[i].imageFileName, 64, 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
-		printf("\n");
+		numWritten = fwrite(&cubes[i].x, sizeof(float), 1, file);
+		numWritten = fwrite(&cubes[i].y, sizeof(float), 1, file);
+		numWritten = fwrite(&cubes[i].z, sizeof(float), 1, file);
+		numWritten = fwrite(&cubes[i].w, sizeof(float), 1, file);
+		numWritten = fwrite(&cubes[i].h, sizeof(float), 1, file);
+		numWritten = fwrite(&cubes[i].d, sizeof(float), 1, file);
+		numWritten = fwrite(&cubes[i].rX, sizeof(float), 1, file);
+		numWritten = fwrite(&cubes[i].rY, sizeof(float), 1, file);
+		numWritten = fwrite(&cubes[i].rZ, sizeof(float), 1, file);
+		numWritten = fwrite(&cubes[i].image, sizeof(uint16_t), 1, file);
+		numWritten = fwrite(cubes[i].imageFileName, 64, 1, file);
 		for (uint8_t ii = 0; ii < 8; ii ++)
 		{
-			numWritten = fwrite(&cubes[i].textureCoords[ii], sizeof(float), 1, file); printf("wrote %zu bytes\n", sizeof(numWritten));
+			numWritten = fwrite(&cubes[i].textureCoords[ii], sizeof(float), 1, file);
 		}
 	}
 
@@ -968,7 +968,7 @@ void loadData()
 
 		}
 
-		for (uint16_t i = 0; i < cubeCount; i ++)
+/*		for (uint16_t i = 0; i < cubeCount; i ++)
 		{
 			printf("%d\n", i);
 			printf("x %f\n", cubes[i].x);
@@ -987,6 +987,7 @@ void loadData()
 				printf(" texCoord[%d] %f\n", ii, cubes[i].textureCoords[ii]);
 			}	
 		}	
+*/
 	fclose(file);
 	}
 }
