@@ -167,6 +167,25 @@ int main(int argc,char**argv)
 		}
 		closedir(d);
 	}
+
+	char* filenameStr = malloc(sizeof(char*) * 64);
+	memset(filenameStr, 0, 64);
+	
+	for (uint16_t ii =0; ii < filenamesCount - 1; ii ++)
+	{
+		for (uint16_t i = ii; i < filenamesCount - 1; i++)
+		{
+			if (strcmp(filenames[i], filenames[i+1]) > 0)
+			{
+				strcpy(filenameStr, filenames[i+1]);
+				strcpy(filenames[i+1], filenames[i]);
+				strcpy(filenames[i], (const char*)filenameStr);
+			}
+		}
+	}
+
+	free(filenameStr);
+	
 	if (filenamesCount > 0)
 	{
 		struct stat file_status;
@@ -902,7 +921,7 @@ void saveData()
 	FILE* file = fopen("cubes.dat", "wb");
 	if (file == NULL)
 	{
-		printf("Error opening file to save data.");
+		printf("Error opening file %s to save data.", "cubes.dat");
 	}
 	size_t numWritten;
 	fwrite(&cubeCount, sizeof(uint16_t), 1, file);
@@ -931,9 +950,22 @@ void saveData()
 
 	fclose(file);
 
-	printf("struct cube size = %d\n", (int)sizeof(struct cube));
-	printf("Cube count = %d\n", cubeCount);
-	printf("Wrote %d bytes\n",(int)sizeof(numWritten));
+	file = fopen("config.dat", "wb");
+	if (file == NULL)
+	{
+		printf("Error opening file %s to save data.", "config.dat");
+	}
+	fwrite(&axisX, sizeof(uint8_t), 1, file);
+	fwrite(&axisY, sizeof(uint8_t), 1, file);
+	fwrite(&axisZ, sizeof(uint8_t), 1, file);
+	fwrite(&pitch, sizeof(float), 1, file);
+	fwrite(&yaw, sizeof(float), 1, file);
+	fwrite(&roll, sizeof(float), 1, file);
+	fwrite(&camX, sizeof(float), 1, file);
+	fwrite(&camY, sizeof(float), 1, file);
+	fwrite(&camZ, sizeof(float), 1, file);
+
+	fclose(file);
 }
 
 void loadData()
@@ -965,6 +997,11 @@ void loadData()
 			{
 				fread(&cubes[i].textureCoords[ii], sizeof(float), 1, file);
 			}
+			for (uint16_t ii = 0; ii < filenamesCount; ii ++)
+			{
+				if (!strcmp(filenames[ii], cubes[i].imageFileName))
+					cubes[i].image = ii;
+			}
 
 		}
 
@@ -988,6 +1025,26 @@ void loadData()
 			}	
 		}	
 */
+	fclose(file);
+
+	file = fopen("config.dat", "rb");
+	if (file == NULL)
+	{
+		printf("Error opening file %s to save data.", "config.dat");
+		exit(1);
+	} else
+	{
+		fread(&axisX, sizeof(uint8_t), 1, file);
+		fread(&axisY, sizeof(uint8_t), 1, file);
+		fread(&axisZ, sizeof(uint8_t), 1, file);
+		fread(&pitch, sizeof(float), 1, file);
+		fread(&yaw, sizeof(float), 1, file);
+		fread(&roll, sizeof(float), 1, file);
+		fread(&camX, sizeof(float), 1, file);
+		fread(&camY, sizeof(float), 1, file);
+		fread(&camZ, sizeof(float), 1, file);
+	}
+	
 	fclose(file);
 	}
 }
