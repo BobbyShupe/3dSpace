@@ -81,6 +81,7 @@ struct imageParameters imageParams[9999];
 struct Motion motion = {false,false,false,false,false,false,false,false};
 
 struct cube* cubes;
+struct cube copyCube;
 uint16_t cubeCount = 0;
 struct cube newCube;
 
@@ -129,6 +130,8 @@ void setSaveCubes();
 bool saveCubes = false;
 bool saveCfg = false;
 float multiplier = 0.0f;
+
+void deleteCube(uint16_t);
 int main(int argc,char**argv)
 {
 	tmpstr = (char*)malloc(sizeof(char) * 5);
@@ -375,7 +378,7 @@ void keyboard(unsigned char key,int x,int y)
 	if (motion.ctrl) multiplier = 0.1f;
 	if (motion.shift) multiplier = 2.0f;
 	if (!motion.ctrl && !motion.shift) multiplier = 1.0f;
-//	printf("%d\n", key);
+	printf("%d\n", key);
     switch(key)
     {
     case 'W':
@@ -562,6 +565,9 @@ void keyboard(unsigned char key,int x,int y)
 						setSaveCubes();
 					break;
 				}
+			break;
+			case 127:
+				deleteCube(selectionIndex);
 			break;
 		}
 		case 'm':
@@ -1115,4 +1121,30 @@ void setSaveCfg()
 void setSaveCubes()
 {
 	if (!saveCubes) saveCubes = true;
+}
+
+void deleteCube(uint16_t d_)
+{
+	if (d_ < cubeCount)
+	{
+		for (uint16_t i = d_; i < cubeCount; i ++)
+		{
+			cubes[i].x = cubes[i+1].x;
+			cubes[i].y = cubes[i+1].y;
+			cubes[i].z = cubes[i+1].z;
+			cubes[i].w = cubes[i+1].w;
+			cubes[i].h = cubes[i+1].h;
+			cubes[i].d = cubes[i+1].d;
+			cubes[i].rX = cubes[i+1].rX;
+			cubes[i].rY = cubes[i+1].rY;
+			cubes[i].rZ = cubes[i+1].rZ;
+			cubes[i].image = cubes[i+1].image;
+			memset(cubes[i].imageFileName, 0, 64);
+			strcpy(cubes[i].imageFileName, cubes[i+1].imageFileName);
+			for (uint8_t ii = 0; ii < 7; ii ++)
+				cubes[i].textureCoords[ii] = cubes[i+1].textureCoords[ii];
+		}
+		cubeCount --;
+	}
+	if (selectionIndex >= cubeCount) selectionIndex = cubeCount - 1;
 }
