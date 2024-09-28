@@ -56,7 +56,7 @@ uint8_t editSubMode = 0;
 void drawStatus();
 struct Motion
 {
-    bool Forward,Backward,Left,Right,Up,Down;
+    bool Forward,Backward,Left,Right,Up,Down,ctrl,shift;
 };
 
 struct cube
@@ -78,7 +78,7 @@ unsigned char* imageData;
 struct imageParameters imageParams[9999];
 
 
-struct Motion motion = {false,false,false,false,false,false};
+struct Motion motion = {false,false,false,false,false,false,false,false};
 
 struct cube* cubes;
 uint16_t cubeCount = 0;
@@ -117,11 +117,17 @@ char* str;
 char* tmpstr;
 char* strLine;
 
+
 void saveData();
 void loadData();
 
 bool exiting = false;
 
+void setSaveCubes();
+void setSaveCfg();
+void setSaveCubes();
+bool saveCubes = false;
+bool saveCfg = false;
 int main(int argc,char**argv)
 {
 	tmpstr = (char*)malloc(sizeof(char) * 5);
@@ -147,7 +153,7 @@ int main(int argc,char**argv)
 	d = opendir(".");
 	if (d)
 	{
-		while ((dir = readdir(d)) != NULL)
+ 		while ((dir = readdir(d)) != NULL)
 		{
 			if (dir->d_type == DT_REG && strlen(dir->d_name) > 4)
 			{
@@ -315,29 +321,35 @@ void camera()
     {
         camX += cos((yaw+90)*TO_RADIANS)/50.0;
         camZ -= sin((yaw+90)*TO_RADIANS)/50.0;
+		setSaveCfg();
     }
     if(motion.Backward)
     {
         camX += cos((yaw+90+180)*TO_RADIANS)/50.0;
         camZ -= sin((yaw+90+180)*TO_RADIANS)/50.0;
+        setSaveCfg();
     }
     if(motion.Left)
     {
         camX += cos((yaw+90+90)*TO_RADIANS)/50.0;
         camZ -= sin((yaw+90+90)*TO_RADIANS)/50.0;
+        setSaveCfg();
     }
     if(motion.Right)
     {
         camX += cos((yaw+90-90)*TO_RADIANS)/50.0;
         camZ -= sin((yaw+90-90)*TO_RADIANS)/50.0;
+        setSaveCfg();
     }
 	if(motion.Up)
 	{
 	    camY += 1/50.0; // Move up
+	    setSaveCfg();
 	}
 	if(motion.Down)
 	{
 	    camY -= 1/50.0; // Move down
+	    setSaveCfg();
 	}
     /*limit the values of pitch
       between -60 and 70
@@ -355,30 +367,38 @@ void camera()
 
 void keyboard(unsigned char key,int x,int y)
 {
+	if (glutGetModifiers() & GLUT_ACTIVE_CTRL) motion.ctrl = true;
 //	printf("%d\n", key);
     switch(key)
     {
     case 'W':
+    	motion.shift = true;
     case 'w':
         motion.Forward = true;
+
         break;
     case 'A':
+    	motion.shift = true;
     case 'a':
         motion.Left = true;
         break;
     case 'S':
+    	motion.shift = true;
     case 's':
         motion.Backward = true;
         break;
     case 'D':
+    	motion.shift = true;
     case 'd':
         motion.Right = true;
         break;
     case 'E':
+    	motion.shift = true;
     case 'e':
         motion.Up = true;
         break;
     case 'Q':
+    	motion.shift = true;
     case 'q':
         motion.Down = true;
         break;
@@ -387,12 +407,14 @@ void keyboard(unsigned char key,int x,int y)
 	break;
 	case ' ':
 		makeCube(camX,camY,camZ);
+		setSaveCubes();
 	break;
 	case 9://TAB key down
     	if (glutGetModifiers() & GLUT_ACTIVE_CTRL) { if (selectionIndex > 0) selectionIndex --; else selectionIndex = cubeCount - 1;} 
     	else
 			selectionIndex ++;
 		if (selectionIndex >= cubeCount) selectionIndex = 0;
+		setSaveCfg();
 	break;
 	case 'x':
 	case 'X':
@@ -401,6 +423,7 @@ void keyboard(unsigned char key,int x,int y)
 			keys[key] = true;
 			axisX = !axisX;	
 		}
+		setSaveCfg();
 	break;
 	case 'y':
 	case 'Y':
@@ -409,6 +432,7 @@ void keyboard(unsigned char key,int x,int y)
 			keys[key] = true;
 			axisY = !axisY;
 		}
+		setSaveCfg();
 	break;
 	case 'z':
 	case 'Z':
@@ -417,6 +441,7 @@ void keyboard(unsigned char key,int x,int y)
 			keys[key] = true;
 			axisZ = !axisZ;
 		}
+		setSaveCfg();
 	break;
 		if (cubeCount > 0)
 		{
@@ -431,28 +456,33 @@ void keyboard(unsigned char key,int x,int y)
 						if (axisX) cubes[selectionIndex].w += 0.1f;
 						if (axisY) cubes[selectionIndex].h += 0.1f;
 						if (axisZ) cubes[selectionIndex].d += 0.1f;
+						setSaveCubes();
 					break;
 					case MODE_MOVE:
 						if (axisX) cubes[selectionIndex].x += 0.1f;
 						if (axisY) cubes[selectionIndex].y += 0.1f;
 						if (axisZ) cubes[selectionIndex].z += 0.1f;
+						setSaveCubes();
 					break;
 					case MODE_ROTATE:
 						if (axisX) 
 						{
 							cubes[selectionIndex].rX += 0.1f;
 							if (cubes[selectionIndex].rX > 360.0f) cubes[selectionIndex].rX = 0.0f;
+							setSaveCubes();
+
 						}
 						if (axisY)
 						{
 							cubes[selectionIndex].rY += 0.1f;
 							if (cubes[selectionIndex].rY > 360.0f) cubes[selectionIndex].rY = 0.0f;
-							
+							setSaveCubes();
 						} 
 						if (axisZ)
 						{
 							cubes[selectionIndex].rZ += 0.1f;
 							if (cubes[selectionIndex].rZ > 360.0f) cubes[selectionIndex].rZ = 0.0f;
+							setSaveCubes();
 						}
 					break;
 					case MODE_TEXTURE:
@@ -460,11 +490,13 @@ void keyboard(unsigned char key,int x,int y)
 						if (cubes[selectionIndex].image == (textureCount)) 
 							cubes[selectionIndex].image = 0;
 						strcpy(cubes[selectionIndex].imageFileName, filenames[cubes[selectionIndex].image]);
+						setSaveCubes();
 					break;
 					case MODE_TEXTURECOORDS:
 						cubes[selectionIndex].textureCoords[editSubMode] += 0.1f;
 						if (cubes[selectionIndex].textureCoords[editSubMode] > 1.0f)
 							cubes[selectionIndex].textureCoords[editSubMode] = 0.0f;
+						setSaveCubes();
 					break;
 				}
 			break;
@@ -478,28 +510,32 @@ void keyboard(unsigned char key,int x,int y)
 						if (axisX) cubes[selectionIndex].w -= 0.1f;
 						if (axisY) cubes[selectionIndex].h -= 0.1f;
 						if (axisZ) cubes[selectionIndex].d -= 0.1f;
+						setSaveCubes();
 					break;
 					case MODE_MOVE:
 						if (axisX) cubes[selectionIndex].x -= 0.1f;
 						if (axisY) cubes[selectionIndex].y -= 0.1f;
 						if (axisZ) cubes[selectionIndex].z -= 0.1f;
+						setSaveCubes();
 					break;
 					case MODE_ROTATE:
 						if (axisX) 
 						{
 							cubes[selectionIndex].rX -= 0.1f;
 							if (cubes[selectionIndex].rX < 0.0f) cubes[selectionIndex].rX = 360.0f;
+							setSaveCubes();
 						}
 						if (axisY)
 						{
 							cubes[selectionIndex].rY -= 0.1f;
 							if (cubes[selectionIndex].rY < 0.0f) cubes[selectionIndex].rY = 360.0f;
-							
+							setSaveCubes();
 						} 
 						if (axisZ)
 						{
 							cubes[selectionIndex].rZ -= 0.1f;
 							if (cubes[selectionIndex].rZ < 0.0f) cubes[selectionIndex].rZ = 360.0f;
+							setSaveCubes();
 						}
 					break;
 					case MODE_TEXTURE:
@@ -511,11 +547,13 @@ void keyboard(unsigned char key,int x,int y)
 
 						memset(cubes[selectionIndex].imageFileName, 0, 64);
 						strcpy(cubes[selectionIndex].imageFileName, filenames[cubes[selectionIndex].image]);
+						setSaveCubes();
 					break;
 					case MODE_TEXTURECOORDS:
 						cubes[selectionIndex].textureCoords[editSubMode] -= 0.1f;
 						if (cubes[selectionIndex].textureCoords[editSubMode] < 0.0f)
 							cubes[selectionIndex].textureCoords[editSubMode] = 1.0f;
+						setSaveCubes();
 					break;
 				}
 			break;
@@ -534,10 +572,12 @@ void keyboard(unsigned char key,int x,int y)
 		    	editMode ++;
 				if (editMode > MODE_MAX) editMode = MODE_NORMAL;
 			}
+			setSaveCfg();
 		break;
 		case 'i':
 		case 'I':
 	    	if (glutGetModifiers() & GLUT_ACTIVE_ALT) drawInfo = !drawInfo;
+	    	setSaveCfg();
 		break;
     }
 
@@ -550,6 +590,8 @@ void keyboard(unsigned char key,int x,int y)
 
 void keyboard_up(unsigned char key,int x,int y)
 {
+    motion.shift = false;
+    motion.ctrl = false;
     switch(key)
     {
     case 'W':
@@ -557,22 +599,27 @@ void keyboard_up(unsigned char key,int x,int y)
         motion.Forward = false;
         break;
     case 'A':
+    	motion.shift = false;
     case 'a':
         motion.Left = false;
         break;
     case 'S':
+    	motion.shift = false;
     case 's':
         motion.Backward = false;
         break;
     case 'D':
+    	motion.shift = false;
     case 'd':
         motion.Right = false;
         break;
     case 'E':
+    	motion.shift = false;
     case 'e':
         motion.Up = false;
         break;
     case 'Q':
+    	motion.shift = false;
     case 'q':
         motion.Down = false;
         break;
@@ -918,54 +965,61 @@ void drawStatus()
 
 void saveData()
 {
-	FILE* file = fopen("cubes.dat", "wb");
-	if (file == NULL)
-	{
-		printf("Error opening file %s to save data.", "cubes.dat");
-	}
-	size_t numWritten;
-	fwrite(&cubeCount, sizeof(uint16_t), 1, file);
+	FILE* file;
 
-	for (uint16_t i = 0; i < cubeCount; i ++)
-	{
-	
-		numWritten = fwrite(&cubes[i].x, sizeof(float), 1, file);
-		numWritten = fwrite(&cubes[i].y, sizeof(float), 1, file);
-		numWritten = fwrite(&cubes[i].z, sizeof(float), 1, file);
-		numWritten = fwrite(&cubes[i].w, sizeof(float), 1, file);
-		numWritten = fwrite(&cubes[i].h, sizeof(float), 1, file);
-		numWritten = fwrite(&cubes[i].d, sizeof(float), 1, file);
-		numWritten = fwrite(&cubes[i].rX, sizeof(float), 1, file);
-		numWritten = fwrite(&cubes[i].rY, sizeof(float), 1, file);
-		numWritten = fwrite(&cubes[i].rZ, sizeof(float), 1, file);
-		numWritten = fwrite(&cubes[i].image, sizeof(uint16_t), 1, file);
-		numWritten = fwrite(cubes[i].imageFileName, 64, 1, file);
-		for (uint8_t ii = 0; ii < 8; ii ++)
+	if (saveCubes)
+	{	
+		file = fopen("cubes.dat", "wb");
+		if (file == NULL)
 		{
-			numWritten = fwrite(&cubes[i].textureCoords[ii], sizeof(float), 1, file);
+			printf("Error opening file %s to save data.", "cubes.dat");
 		}
+		size_t numWritten;
+		fwrite(&cubeCount, sizeof(uint16_t), 1, file);
+
+		for (uint16_t i = 0; i < cubeCount; i ++)
+		{
+	
+			numWritten = fwrite(&cubes[i].x, sizeof(float), 1, file);
+			numWritten = fwrite(&cubes[i].y, sizeof(float), 1, file);
+			numWritten = fwrite(&cubes[i].z, sizeof(float), 1, file);
+			numWritten = fwrite(&cubes[i].w, sizeof(float), 1, file);
+			numWritten = fwrite(&cubes[i].h, sizeof(float), 1, file);
+			numWritten = fwrite(&cubes[i].d, sizeof(float), 1, file);
+			numWritten = fwrite(&cubes[i].rX, sizeof(float), 1, file);
+			numWritten = fwrite(&cubes[i].rY, sizeof(float), 1, file);
+			numWritten = fwrite(&cubes[i].rZ, sizeof(float), 1, file);
+			numWritten = fwrite(&cubes[i].image, sizeof(uint16_t), 1, file);
+			numWritten = fwrite(cubes[i].imageFileName, 64, 1, file);
+			for (uint8_t ii = 0; ii < 8; ii ++)
+			{
+				numWritten = fwrite(&cubes[i].textureCoords[ii], sizeof(float), 1, file);
+			}
+		}
+	//	fwrite(&cubes, sizeof(struct cube), cubeCount, file);
+		fclose(file);
 	}
 
-//	fwrite(&cubes, sizeof(struct cube), cubeCount, file);
-
-	fclose(file);
-
-	file = fopen("config.dat", "wb");
-	if (file == NULL)
+	if (saveCfg)
 	{
-		printf("Error opening file %s to save data.", "config.dat");
-	}
-	fwrite(&axisX, sizeof(uint8_t), 1, file);
-	fwrite(&axisY, sizeof(uint8_t), 1, file);
-	fwrite(&axisZ, sizeof(uint8_t), 1, file);
-	fwrite(&pitch, sizeof(float), 1, file);
-	fwrite(&yaw, sizeof(float), 1, file);
-	fwrite(&roll, sizeof(float), 1, file);
-	fwrite(&camX, sizeof(float), 1, file);
-	fwrite(&camY, sizeof(float), 1, file);
-	fwrite(&camZ, sizeof(float), 1, file);
+		file = fopen("config.dat", "wb");
+		if (file == NULL)
+		{
+			printf("Error opening file %s to save data.", "config.dat");
+		}
+		fwrite(&axisX, sizeof(uint8_t), 1, file);
+		fwrite(&axisY, sizeof(uint8_t), 1, file);
+		fwrite(&axisZ, sizeof(uint8_t), 1, file);
+		fwrite(&pitch, sizeof(float), 1, file);
+		fwrite(&yaw, sizeof(float), 1, file);
+		fwrite(&roll, sizeof(float), 1, file);
+		fwrite(&camX, sizeof(float), 1, file);
+		fwrite(&camY, sizeof(float), 1, file);
+		fwrite(&camZ, sizeof(float), 1, file);
+		fwrite(&selectionIndex, sizeof(uint16_t), 1, file);
 
-	fclose(file);
+		fclose(file);
+	}
 }
 
 void loadData()
@@ -1004,7 +1058,6 @@ void loadData()
 			}
 
 		}
-
 /*		for (uint16_t i = 0; i < cubeCount; i ++)
 		{
 			printf("%d\n", i);
@@ -1025,13 +1078,13 @@ void loadData()
 			}	
 		}	
 */
-	fclose(file);
+		fclose(file);
 
+		}
 	file = fopen("config.dat", "rb");
 	if (file == NULL)
 	{
 		printf("Error opening file %s to save data.", "config.dat");
-		exit(1);
 	} else
 	{
 		fread(&axisX, sizeof(uint8_t), 1, file);
@@ -1043,8 +1096,17 @@ void loadData()
 		fread(&camX, sizeof(float), 1, file);
 		fread(&camY, sizeof(float), 1, file);
 		fread(&camZ, sizeof(float), 1, file);
+		fread(&selectionIndex, sizeof(uint16_t), 1, file);
+		fclose(file);		
 	}
-	
-	fclose(file);
-	}
+}
+
+void setSaveCfg()
+{
+	if (!saveCfg) saveCfg = true;
+}
+
+void setSaveCubes()
+{
+	if (!saveCubes) saveCubes = true;
 }
