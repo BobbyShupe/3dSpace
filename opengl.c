@@ -81,7 +81,7 @@ struct imageParameters imageParams[9999];
 struct Motion motion = {false,false,false,false,false,false,false,false};
 
 struct cube* cubes;
-struct cube copyCube;
+struct cube cubeCopy;
 uint16_t cubeCount = 0;
 struct cube newCube;
 
@@ -132,6 +132,9 @@ bool saveCfg = false;
 float multiplier = 0.0f;
 
 void deleteCube(uint16_t);
+void copyCube();
+void pasteCube();
+bool copyBufferFull = false;
 int main(int argc,char**argv)
 {
 	tmpstr = (char*)malloc(sizeof(char) * 5);
@@ -378,7 +381,7 @@ void keyboard(unsigned char key,int x,int y)
 	if (motion.ctrl) multiplier = 0.1f;
 	if (motion.shift) multiplier = 2.0f;
 	if (!motion.ctrl && !motion.shift) multiplier = 1.0f;
-	printf("%d\n", key);
+	//printf("%d\n", key);
     switch(key)
     {
     case 'W':
@@ -568,6 +571,14 @@ void keyboard(unsigned char key,int x,int y)
 			break;
 			case 127:
 				deleteCube(selectionIndex);
+			break;
+			case 'C':
+			case 'c':
+				copyCube();
+			break;
+			case 'V':
+			case 'v':
+				pasteCube();
 			break;
 		}
 		case 'm':
@@ -1147,4 +1158,45 @@ void deleteCube(uint16_t d_)
 		cubeCount --;
 	}
 	if (selectionIndex >= cubeCount) selectionIndex = cubeCount - 1;
+}
+
+void copyCube()
+{
+	if (selectionIndex >= 0 && selectionIndex < cubeCount)
+	{
+		cubeCopy.x = cubes[selectionIndex].x;
+		cubeCopy.y = cubes[selectionIndex].y;
+		cubeCopy.z = cubes[selectionIndex].z;
+		cubeCopy.w = cubes[selectionIndex].w;
+		cubeCopy.h = cubes[selectionIndex].h;
+		cubeCopy.d = cubes[selectionIndex].d;
+		cubeCopy.rX = cubes[selectionIndex].rX;
+		cubeCopy.rY = cubes[selectionIndex].rY;
+		cubeCopy.rZ = cubes[selectionIndex].rZ;
+		cubeCopy.image = cubes[selectionIndex].image;
+		memset(cubeCopy.imageFileName, 0, 64);
+		strcpy(cubeCopy.imageFileName, cubes[selectionIndex].imageFileName);
+		for (uint8_t i = 0; i < 7; i++)
+			cubeCopy.textureCoords[i] = cubes[selectionIndex].textureCoords[i];
+		copyBufferFull = true;
+	}
+}
+
+void pasteCube()
+{
+	if (copyBufferFull)
+	{
+		makeCube(camX, camY, camZ);
+		cubes[textureCount].w = cubeCopy.w;
+		cubes[textureCount].h = cubeCopy.h;
+		cubes[textureCount].d = cubeCopy.d;
+		cubes[textureCount].rX = cubeCopy.rX;
+		cubes[textureCount].rY = cubeCopy.rY;
+		cubes[textureCount].rZ = cubeCopy.rZ;
+		cubes[textureCount].image = cubeCopy.image;
+		memset(cubes[cubeCount].imageFileName, 0, 64);
+		strcpy(cubes[cubeCount].imageFileName, cubeCopy.imageFileName);
+		for (uint8_t i = 0; i < 7; i ++)
+			cubes[cubeCount].textureCoords[i] = cubeCopy.textureCoords[i];
+	}
 }
