@@ -128,6 +128,7 @@ void setSaveCfg();
 void setSaveCubes();
 bool saveCubes = false;
 bool saveCfg = false;
+float multiplier = 0.0f;
 int main(int argc,char**argv)
 {
 	tmpstr = (char*)malloc(sizeof(char) * 5);
@@ -317,38 +318,41 @@ void passive_motion(int x,int y)
 void camera()
 {
 
+	if (motion.ctrl) multiplier = 0.1f;
+	if (motion.shift) multiplier = 2.0f;
+	if (!motion.ctrl && !motion.shift) multiplier = 1.0f;
     if(motion.Forward)
     {
-        camX += cos((yaw+90)*TO_RADIANS)/50.0;
-        camZ -= sin((yaw+90)*TO_RADIANS)/50.0;
+        camX += (cos((yaw+90)*TO_RADIANS)/50.0) * multiplier;
+        camZ -= (sin((yaw+90)*TO_RADIANS)/50.0) * multiplier;
 		setSaveCfg();
     }
     if(motion.Backward)
     {
-        camX += cos((yaw+90+180)*TO_RADIANS)/50.0;
-        camZ -= sin((yaw+90+180)*TO_RADIANS)/50.0;
+        camX += (cos((yaw+90+180)*TO_RADIANS)/50.0) * multiplier;
+        camZ -= (sin((yaw+90+180)*TO_RADIANS)/50.0) * multiplier;
         setSaveCfg();
     }
     if(motion.Left)
     {
-        camX += cos((yaw+90+90)*TO_RADIANS)/50.0;
-        camZ -= sin((yaw+90+90)*TO_RADIANS)/50.0;
+        camX += (cos((yaw+90+90)*TO_RADIANS)/50.0) * multiplier;
+        camZ -= (sin((yaw+90+90)*TO_RADIANS)/50.0) * multiplier;
         setSaveCfg();
     }
     if(motion.Right)
     {
-        camX += cos((yaw+90-90)*TO_RADIANS)/50.0;
-        camZ -= sin((yaw+90-90)*TO_RADIANS)/50.0;
+        camX += (cos((yaw+90-90)*TO_RADIANS)/50.0) * multiplier;
+        camZ -= (sin((yaw+90-90)*TO_RADIANS)/50.0) * multiplier;
         setSaveCfg();
     }
 	if(motion.Up)
 	{
-	    camY += 1/50.0; // Move up
+	    camY += (1/50.0) * multiplier; // Move up
 	    setSaveCfg();
 	}
 	if(motion.Down)
 	{
-	    camY -= 1/50.0; // Move down
+	    camY -= (1/50.0) * multiplier; // Move down
 	    setSaveCfg();
 	}
     /*limit the values of pitch
@@ -367,7 +371,10 @@ void camera()
 
 void keyboard(unsigned char key,int x,int y)
 {
-	if (glutGetModifiers() & GLUT_ACTIVE_CTRL) motion.ctrl = true;
+	if (glutGetModifiers() & GLUT_ACTIVE_ALT) motion.ctrl = true; else motion.ctrl = false;
+	if (motion.ctrl) multiplier = 0.1f;
+	if (motion.shift) multiplier = 2.0f;
+	if (!motion.ctrl && !motion.shift) multiplier = 1.0f;
 //	printf("%d\n", key);
     switch(key)
     {
@@ -375,7 +382,6 @@ void keyboard(unsigned char key,int x,int y)
     	motion.shift = true;
     case 'w':
         motion.Forward = true;
-
         break;
     case 'A':
     	motion.shift = true;
@@ -453,34 +459,34 @@ void keyboard(unsigned char key,int x,int y)
 
 					break;
 					case MODE_SCALE:
-						if (axisX) cubes[selectionIndex].w += 0.1f;
-						if (axisY) cubes[selectionIndex].h += 0.1f;
-						if (axisZ) cubes[selectionIndex].d += 0.1f;
+						if (axisX) cubes[selectionIndex].w += 0.1f * multiplier;
+						if (axisY) cubes[selectionIndex].h += 0.1f * multiplier;
+						if (axisZ) cubes[selectionIndex].d += 0.1f * multiplier;
 						setSaveCubes();
 					break;
 					case MODE_MOVE:
-						if (axisX) cubes[selectionIndex].x += 0.1f;
-						if (axisY) cubes[selectionIndex].y += 0.1f;
-						if (axisZ) cubes[selectionIndex].z += 0.1f;
+						if (axisX) cubes[selectionIndex].x += 0.1f * multiplier;
+						if (axisY) cubes[selectionIndex].y += 0.1f * multiplier;
+						if (axisZ) cubes[selectionIndex].z += 0.1f * multiplier;
 						setSaveCubes();
 					break;
 					case MODE_ROTATE:
 						if (axisX) 
 						{
-							cubes[selectionIndex].rX += 0.1f;
+							cubes[selectionIndex].rX += 0.1f * multiplier;
 							if (cubes[selectionIndex].rX > 360.0f) cubes[selectionIndex].rX = 0.0f;
 							setSaveCubes();
 
 						}
 						if (axisY)
 						{
-							cubes[selectionIndex].rY += 0.1f;
+							cubes[selectionIndex].rY += 0.1f * multiplier;
 							if (cubes[selectionIndex].rY > 360.0f) cubes[selectionIndex].rY = 0.0f;
 							setSaveCubes();
 						} 
 						if (axisZ)
 						{
-							cubes[selectionIndex].rZ += 0.1f;
+							cubes[selectionIndex].rZ += 0.1f * multiplier;
 							if (cubes[selectionIndex].rZ > 360.0f) cubes[selectionIndex].rZ = 0.0f;
 							setSaveCubes();
 						}
@@ -507,33 +513,33 @@ void keyboard(unsigned char key,int x,int y)
 
 					break;
 					case MODE_SCALE:
-						if (axisX) cubes[selectionIndex].w -= 0.1f;
-						if (axisY) cubes[selectionIndex].h -= 0.1f;
-						if (axisZ) cubes[selectionIndex].d -= 0.1f;
+						if (axisX) cubes[selectionIndex].w -= 0.1f * multiplier;
+						if (axisY) cubes[selectionIndex].h -= 0.1f * multiplier;
+						if (axisZ) cubes[selectionIndex].d -= 0.1f * multiplier;
 						setSaveCubes();
 					break;
 					case MODE_MOVE:
-						if (axisX) cubes[selectionIndex].x -= 0.1f;
-						if (axisY) cubes[selectionIndex].y -= 0.1f;
-						if (axisZ) cubes[selectionIndex].z -= 0.1f;
+						if (axisX) cubes[selectionIndex].x -= 0.1f * multiplier;
+						if (axisY) cubes[selectionIndex].y -= 0.1f * multiplier;
+						if (axisZ) cubes[selectionIndex].z -= 0.1f * multiplier;
 						setSaveCubes();
 					break;
 					case MODE_ROTATE:
 						if (axisX) 
 						{
-							cubes[selectionIndex].rX -= 0.1f;
+							cubes[selectionIndex].rX -= 0.1f * multiplier;
 							if (cubes[selectionIndex].rX < 0.0f) cubes[selectionIndex].rX = 360.0f;
 							setSaveCubes();
 						}
 						if (axisY)
 						{
-							cubes[selectionIndex].rY -= 0.1f;
+							cubes[selectionIndex].rY -= 0.1f * multiplier;
 							if (cubes[selectionIndex].rY < 0.0f) cubes[selectionIndex].rY = 360.0f;
 							setSaveCubes();
 						} 
 						if (axisZ)
 						{
-							cubes[selectionIndex].rZ -= 0.1f;
+							cubes[selectionIndex].rZ -= 0.1f * multiplier;
 							if (cubes[selectionIndex].rZ < 0.0f) cubes[selectionIndex].rZ = 360.0f;
 							setSaveCubes();
 						}
