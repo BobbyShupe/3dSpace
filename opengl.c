@@ -632,6 +632,18 @@ void keyboard(unsigned char key,int x,int y)
 	    	if (glutGetModifiers() & GLUT_ACTIVE_ALT) drawInfo = !drawInfo;
 	    	setSaveCfg();
 		break;
+		case 'R':
+		case 'r':
+			if (glutGetModifiers() & GLUT_ACTIVE_ALT)
+			{
+				if (cubeCount > 0)
+				{
+					if (axisX) cubes[selectionIndex].rX = 0.0f;
+					if (axisY) cubes[selectionIndex].rY = 0.0f;
+					if (axisZ) cubes[selectionIndex].rZ = 0.0f;
+				}
+			}
+		break;
     }
 
     if (exiting)
