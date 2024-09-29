@@ -763,6 +763,9 @@ void drawCubes()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glPushMatrix();
 		glTranslatef(cubes[i].x, cubes[i].y, cubes[i].z);
+	    glRotatef(cubes[i].rX,1.0,0.0,0.0); // Along X axis
+	    glRotatef(cubes[i].rY,0.0,1.0,0.0);    //Along Y axis
+	    glRotatef(cubes[i].rZ,0.0,0.0,1.0);    //Along Z axis
 
     glBindTexture(GL_TEXTURE_2D, textures[cubes[i].image]);
 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageParams[imageCount].width, imageParams[imageCount].height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
@@ -1041,6 +1044,22 @@ void drawStatus()
 		sprintf(strLine, "	Z %f", cubes[selectionIndex].z);
 		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 		textIndex++;
+
+		memset(strLine, 0, 255);
+		sprintf(strLine, "	Rotation X %f", cubes[selectionIndex].rX);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+
+		memset(strLine, 0, 255);
+		sprintf(strLine, "	Rotation Y %f", cubes[selectionIndex].rY);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+
+		memset(strLine, 0, 255);
+		sprintf(strLine, "	Rotation Z %f", cubes[selectionIndex].rZ);
+		drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+		textIndex++;
+
 
 		memset(strLine, 0, 255);
 		sprintf(strLine, "	W %f", cubes[selectionIndex].w);
