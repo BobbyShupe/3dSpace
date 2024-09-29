@@ -140,6 +140,7 @@ void specialKeyboard(int key,int x,int y);
 void specialKeyboardUp(int key,int x,int y);
 
 bool constrainPasteToOriginalPosition = false;
+bool constrainToTextureDimensions = false;
 
 int main(int argc,char**argv)
 {
@@ -330,13 +331,10 @@ void passive_motion(int x,int y)
  //   if (pitch < 0) pitch += 360.0f;
     if (yaw > 360) yaw -= 360.0f;
 	if (yaw < 0) yaw += 360.0;
-	 
-		
 }
 
 void camera()
 {
-
 	if (motion.ctrl) multiplier = 0.1f;
 	if (motion.shift) multiplier = 5.0f;
 	if (!motion.ctrl && !motion.shift) multiplier = 1.0f;
@@ -542,6 +540,12 @@ void keyboard(unsigned char key,int x,int y)
 						if (cubes[selectionIndex].image == (textureCount)) 
 							cubes[selectionIndex].image = 0;
 						strcpy(cubes[selectionIndex].imageFileName, filenames[cubes[selectionIndex].image]);
+
+						if (constrainToTextureDimensions)
+						{
+							if (axisX) cubes[selectionIndex].w = imageParams[cubes[selectionIndex].image].width * 0.001f;
+							if (axisY) cubes[selectionIndex].h = imageParams[cubes[selectionIndex].image].height * 0.001f;
+						}
 						setSaveCubes();
 					break;
 					case MODE_TEXTURECOORDS:
@@ -607,6 +611,12 @@ void keyboard(unsigned char key,int x,int y)
 
 						memset(cubes[selectionIndex].imageFileName, 0, 64);
 						strcpy(cubes[selectionIndex].imageFileName, filenames[cubes[selectionIndex].image]);
+						if (constrainToTextureDimensions)
+						{
+							if (axisX) cubes[selectionIndex].w = imageParams[cubes[selectionIndex].image].width * 0.001f;
+							if (axisY) cubes[selectionIndex].h = imageParams[cubes[selectionIndex].image].height * 0.001f;
+						}
+						
 						setSaveCubes();
 					break;
 					case MODE_TEXTURECOORDS:
@@ -622,9 +632,7 @@ void keyboard(unsigned char key,int x,int y)
 			break;
 			case 'C':
 			case 'c':
-				if (glutGetModifiers() & GLUT_ACTIVE_ALT) constrainPasteToOriginalPosition = !constrainPasteToOriginalPosition;
-				else
-					copyCube();
+				copyCube();
 			break;
 			case 'V':
 			case 'v':
@@ -738,6 +746,12 @@ void specialKeyboard(int key, int x, int y)
 		break;
 		case GLUT_KEY_DOWN:
 		    motion.rotDown = true;		
+		break;
+		case GLUT_KEY_F1:
+			constrainPasteToOriginalPosition = !constrainPasteToOriginalPosition;
+		break;
+		case GLUT_KEY_F2:
+			constrainToTextureDimensions = !constrainToTextureDimensions;
 		break;
 	}
 }
@@ -1032,6 +1046,11 @@ void drawStatus()
 	textIndex++;
 
 	memset(strLine, 0, 255);
+	sprintf(strLine, "Constrain to texture dimensions %d", constrainToTextureDimensions);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
 	switch (editMode)
 	{
 		case MODE_NORMAL:
@@ -1198,7 +1217,7 @@ void saveData()
 		fwrite(&constrainPasteToOriginalPosition, sizeof(uint8_t), 1, file);
 		fwrite(&editMode, sizeof(uint8_t), 1, file);
 		fwrite(&editSubMode, sizeof(uint8_t), 1, file);
-		
+		fwrite(&constrainToTextureDimensions, sizeof(uint8_t), 1, file);		
 		fclose(file);
 	}
 }
@@ -1281,6 +1300,7 @@ void loadData()
 		fread(&constrainPasteToOriginalPosition, sizeof(uint8_t), 1, file);
 		fread(&editMode, sizeof(uint8_t), 1, file);
 		fread(&editSubMode, sizeof(uint8_t), 1, file);
+		fread(&constrainToTextureDimensions, sizeof(uint8_t), 1, file);
 		fclose(file);		
 	}
 }
@@ -1352,16 +1372,16 @@ void pasteCube()
 	{
 		if (constrainPasteToOriginalPosition) makeCube(cubeCopy.x,cubeCopy.y,cubeCopy.z); else
 			makeCube(camX, camY, camZ);
-		cubes[textureCount].w = cubeCopy.w;
-		cubes[textureCount].h = cubeCopy.h;
-		cubes[textureCount].d = cubeCopy.d;
-		cubes[textureCount].rX = cubeCopy.rX;
-		cubes[textureCount].rY = cubeCopy.rY;
-		cubes[textureCount].rZ = cubeCopy.rZ;
-		cubes[textureCount].image = cubeCopy.image;
-		memset(cubes[cubeCount].imageFileName, 0, 64);
-		strcpy(cubes[cubeCount].imageFileName, cubeCopy.imageFileName);
+		cubes[cubeCount-1].w = cubeCopy.w;
+		cubes[cubeCount-1].h = cubeCopy.h;
+		cubes[cubeCount-1].d = cubeCopy.d;
+		cubes[cubeCount-1].rX = cubeCopy.rX;
+		cubes[cubeCount-1].rY = cubeCopy.rY;
+		cubes[cubeCount-1].rZ = cubeCopy.rZ;
+		cubes[cubeCount-1].image = cubeCopy.image;
+		memset(cubes[cubeCount-1].imageFileName, 0, 64);
+		strcpy(cubes[cubeCount-1].imageFileName, cubeCopy.imageFileName);
 		for (uint8_t i = 0; i < 7; i ++)
-			cubes[cubeCount].textureCoords[i] = cubeCopy.textureCoords[i];
+			cubes[cubeCount-1].textureCoords[i] = cubeCopy.textureCoords[i];
 	}
 }
