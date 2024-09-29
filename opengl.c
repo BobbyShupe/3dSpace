@@ -139,6 +139,8 @@ bool copyBufferFull = false;
 void specialKeyboard(int key,int x,int y);
 void specialKeyboardUp(int key,int x,int y);
 
+bool constrainPasteToOriginalPosition = false;
+
 int main(int argc,char**argv)
 {
 	tmpstr = (char*)malloc(sizeof(char) * 5);
@@ -407,11 +409,11 @@ void camera()
 
 void keyboard(unsigned char key,int x,int y)
 {
-	if (glutGetModifiers() & GLUT_ACTIVE_ALT) motion.ctrl = true; else motion.ctrl = false;
+	//if (glutGetModifiers() & GLUT_ACTIVE_ALT) motion.ctrl = true; else motion.ctrl = false;
 	if (motion.ctrl) multiplier = 0.1f;
 	if (motion.shift) multiplier = 2.0f;
 	if (!motion.ctrl && !motion.shift) multiplier = 1.0f;
-	printf("%d\n", key);
+//''	printf("%d\n", key);
     switch(key)
     {
     case 'W':
@@ -501,9 +503,17 @@ void keyboard(unsigned char key,int x,int y)
 						setSaveCubes();
 					break;
 					case MODE_MOVE:
-						if (axisX) cubes[selectionIndex].x += 0.1f * multiplier;
-						if (axisY) cubes[selectionIndex].y += 0.1f * multiplier;
-						if (axisZ) cubes[selectionIndex].z += 0.1f * multiplier;
+						if (glutGetModifiers() & GLUT_ACTIVE_ALT)
+						{
+							if (axisX) cubes[selectionIndex].x += cubes[selectionIndex].w * multiplier;
+							if (axisY) cubes[selectionIndex].y += cubes[selectionIndex].h * multiplier;
+							if (axisZ) cubes[selectionIndex].z += cubes[selectionIndex].d * multiplier;							
+						} else
+						{
+							if (axisX) cubes[selectionIndex].x += 0.1f * multiplier;
+							if (axisY) cubes[selectionIndex].y += 0.1f * multiplier;
+							if (axisZ) cubes[selectionIndex].z += 0.1f * multiplier;							
+						}
 						setSaveCubes();
 					break;
 					case MODE_ROTATE:
@@ -555,9 +565,17 @@ void keyboard(unsigned char key,int x,int y)
 						setSaveCubes();
 					break;
 					case MODE_MOVE:
-						if (axisX) cubes[selectionIndex].x -= 0.1f * multiplier;
-						if (axisY) cubes[selectionIndex].y -= 0.1f * multiplier;
-						if (axisZ) cubes[selectionIndex].z -= 0.1f * multiplier;
+						if (glutGetModifiers() & GLUT_ACTIVE_ALT)
+						{
+							if (axisX) cubes[selectionIndex].x -= cubes[selectionIndex].w * multiplier;
+							if (axisY) cubes[selectionIndex].y -= cubes[selectionIndex].h * multiplier;
+							if (axisZ) cubes[selectionIndex].z -= cubes[selectionIndex].d * multiplier;							
+						} else
+						{
+							if (axisX) cubes[selectionIndex].x -= 0.1f * multiplier;
+							if (axisY) cubes[selectionIndex].y -= 0.1f * multiplier;
+							if (axisZ) cubes[selectionIndex].z -= 0.1f * multiplier;							
+						}
 						setSaveCubes();
 					break;
 					case MODE_ROTATE:
@@ -604,7 +622,9 @@ void keyboard(unsigned char key,int x,int y)
 			break;
 			case 'C':
 			case 'c':
-				copyCube();
+				if (glutGetModifiers() & GLUT_ACTIVE_ALT) constrainPasteToOriginalPosition = !constrainPasteToOriginalPosition;
+				else
+					copyCube();
 			break;
 			case 'V':
 			case 'v':
@@ -1007,6 +1027,11 @@ void drawStatus()
 	textIndex++;
 
 	memset(strLine, 0, 255);
+	sprintf(strLine, "Constrain paste to original position %d", constrainPasteToOriginalPosition);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
 	switch (editMode)
 	{
 		case MODE_NORMAL:
@@ -1170,7 +1195,10 @@ void saveData()
 		fwrite(&camY, sizeof(float), 1, file);
 		fwrite(&camZ, sizeof(float), 1, file);
 		fwrite(&selectionIndex, sizeof(uint16_t), 1, file);
-
+		fwrite(&constrainPasteToOriginalPosition, sizeof(uint8_t), 1, file);
+		fwrite(&editMode, sizeof(uint8_t), 1, file);
+		fwrite(&editSubMode, sizeof(uint8_t), 1, file);
+		
 		fclose(file);
 	}
 }
@@ -1250,6 +1278,9 @@ void loadData()
 		fread(&camY, sizeof(float), 1, file);
 		fread(&camZ, sizeof(float), 1, file);
 		fread(&selectionIndex, sizeof(uint16_t), 1, file);
+		fread(&constrainPasteToOriginalPosition, sizeof(uint8_t), 1, file);
+		fread(&editMode, sizeof(uint8_t), 1, file);
+		fread(&editSubMode, sizeof(uint8_t), 1, file);
 		fclose(file);		
 	}
 }
@@ -1319,7 +1350,8 @@ void pasteCube()
 {
 	if (copyBufferFull)
 	{
-		makeCube(camX, camY, camZ);
+		if (constrainPasteToOriginalPosition) makeCube(cubeCopy.x,cubeCopy.y,cubeCopy.z); else
+			makeCube(camX, camY, camZ);
 		cubes[textureCount].w = cubeCopy.w;
 		cubes[textureCount].h = cubeCopy.h;
 		cubes[textureCount].d = cubeCopy.d;
