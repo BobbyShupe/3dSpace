@@ -56,7 +56,7 @@ uint8_t editSubMode = 0;
 void drawStatus();
 struct Motion
 {
-    bool Forward,Backward,Left,Right,Up,Down,ctrl,shift;
+    bool Forward,Backward,Left,Right,Up,Down,ctrl,shift,rotLeft,rotRight,rotUp,rotDown;
 };
 
 struct cube
@@ -78,7 +78,7 @@ unsigned char* imageData;
 struct imageParameters imageParams[9999];
 
 
-struct Motion motion = {false,false,false,false,false,false,false,false};
+struct Motion motion = {false,false,false,false,false,false,false,false,false,false,false,false};
 
 struct cube* cubes;
 struct cube cubeCopy;
@@ -135,6 +135,10 @@ void deleteCube(uint16_t);
 void copyCube();
 void pasteCube();
 bool copyBufferFull = false;
+
+void specialKeyboard(int key,int x,int y);
+void specialKeyboardUp(int key,int x,int y);
+
 int main(int argc,char**argv)
 {
 	tmpstr = (char*)malloc(sizeof(char) * 5);
@@ -153,7 +157,8 @@ int main(int argc,char**argv)
     glutTimerFunc(0,timer,0);    //more info about this is given below at definition of timer()
     glutKeyboardFunc(keyboard);
     glutKeyboardUpFunc(keyboard_up);
-
+	glutSpecialFunc(specialKeyboard);
+	glutSpecialUpFunc(specialKeyboardUp);
 
 	DIR *d;
 	struct dirent *dir;
@@ -361,6 +366,23 @@ void camera()
 	    camY -= (1/50.0) * multiplier; // Move down
 	    setSaveCfg();
 	}
+	if(motion.rotLeft)
+	{
+		yaw+=1.0f;
+	}
+	if(motion.rotUp)
+	{
+		pitch+=1.0f;
+	}
+	if(motion.rotRight)
+	{
+		yaw-=1.0f;	
+	}
+	if(motion.rotDown)
+	{
+		pitch-=1.0f;	
+	}
+	
     /*limit the values of pitch
       between -60 and 70
     */
@@ -381,7 +403,7 @@ void keyboard(unsigned char key,int x,int y)
 	if (motion.ctrl) multiplier = 0.1f;
 	if (motion.shift) multiplier = 2.0f;
 	if (!motion.ctrl && !motion.shift) multiplier = 1.0f;
-	//printf("%d\n", key);
+	printf("%d\n", key);
     switch(key)
     {
     case 'W':
@@ -661,6 +683,45 @@ void keyboard_up(unsigned char key,int x,int y)
     }
 }
 
+void specialKeyboard(int key, int x, int y)
+{
+	switch(key)
+	{
+		case GLUT_KEY_LEFT:
+		    motion.rotLeft = true;
+		break;
+		case GLUT_KEY_UP:
+		    motion.rotUp = true;
+		break;
+		case GLUT_KEY_RIGHT:
+		    motion.rotRight = true;		
+		break;
+		case GLUT_KEY_DOWN:
+		    motion.rotDown = true;		
+		break;
+	}
+}
+
+void specialKeyboardUp(int key, int x, int y)
+{
+	switch(key)
+	{
+		case GLUT_KEY_LEFT:
+			motion.rotLeft = false;
+		break;
+		case GLUT_KEY_UP:
+			motion.rotUp = false;
+		break;
+		case GLUT_KEY_RIGHT:
+			motion.rotRight = false;
+		break;
+		case GLUT_KEY_DOWN:
+			motion.rotDown = false;
+		break;
+	}
+	
+}
+
 void makeCube(float _x, float _y, float _z)
 {
 	newCube.x = _x; newCube.y = _y; newCube.z = _z;
@@ -874,6 +935,36 @@ void drawStatus()
 
 	memset(strLine, 0, 255);
 	sprintf(strLine, "Texture Count %d", textureCount);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
+	sprintf(strLine, "X %f", camX);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
+	sprintf(strLine, "Y %f", camY);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
+	sprintf(strLine, "Z %f", camZ);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
+	sprintf(strLine, "pitch %f", pitch);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
+	sprintf(strLine, "yaw %f", yaw);
+	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
+	textIndex++;
+
+	memset(strLine, 0, 255);
+	sprintf(strLine, "roll %f", roll);
 	drawText(10, glutGet(GLUT_WINDOW_HEIGHT) - 18 * textIndex, strLine);
 	textIndex++;
 
@@ -1157,7 +1248,10 @@ void deleteCube(uint16_t d_)
 		}
 		cubeCount --;
 	}
-	if (selectionIndex >= cubeCount) selectionIndex = cubeCount - 1;
+	if (selectionIndex >= cubeCount) 
+	{
+ 		if (cubeCount > 0) selectionIndex = cubeCount - 1;
+	}
 }
 
 void copyCube()
