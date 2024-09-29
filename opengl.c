@@ -324,24 +324,32 @@ void passive_motion(int x,int y)
     /* apply the changes to pitch and yaw*/
     yaw+=(float)dev_x/20.0;
     pitch+=(float)dev_y/20.0;
+//    if (pitch > 360) pitch -= 360.0f;
+ //   if (pitch < 0) pitch += 360.0f;
+    if (yaw > 360) yaw -= 360.0f;
+	if (yaw < 0) yaw += 360.0;
+	 
+		
 }
 
 void camera()
 {
 
 	if (motion.ctrl) multiplier = 0.1f;
-	if (motion.shift) multiplier = 2.0f;
+	if (motion.shift) multiplier = 5.0f;
 	if (!motion.ctrl && !motion.shift) multiplier = 1.0f;
     if(motion.Forward)
     {
         camX += (cos((yaw+90)*TO_RADIANS)/50.0) * multiplier;
         camZ -= (sin((yaw+90)*TO_RADIANS)/50.0) * multiplier;
+        camY += (tan((pitch)*TO_RADIANS)/50.0) * multiplier;
 		setSaveCfg();
     }
     if(motion.Backward)
     {
         camX += (cos((yaw+90+180)*TO_RADIANS)/50.0) * multiplier;
         camZ -= (sin((yaw+90+180)*TO_RADIANS)/50.0) * multiplier;
+        camY -= (tan((pitch)*TO_RADIANS)/50.0) * multiplier;
         setSaveCfg();
     }
     if(motion.Left)
