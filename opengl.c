@@ -491,17 +491,17 @@ void keyboard(unsigned char key,int x,int y)
 				switch(editMode)
 				{
 					case MODE_MOVE:
-						if (glutGetModifiers() & GLUT_ACTIVE_ALT)
-						{
+	//					if (glutGetModifiers() & GLUT_ACTIVE_ALT)
+	//					{
 							if (axisX) cubes[selectionIndex].x += cubes[selectionIndex].w;
 							if (axisY) cubes[selectionIndex].y += cubes[selectionIndex].h;
 							if (axisZ) cubes[selectionIndex].z += cubes[selectionIndex].d;							
-						} else
-						{
+	//					} else
+	//					{
 							if (axisX) cubes[selectionIndex].x += 0.1f;
 							if (axisY) cubes[selectionIndex].y += 0.1f;
 							if (axisZ) cubes[selectionIndex].z += 0.1f;							
-						}
+//						}
 						setSaveCubes();						
 					break;
 				}
@@ -578,17 +578,17 @@ void keyboard(unsigned char key,int x,int y)
 				switch(editMode)
 				{
 					case MODE_MOVE:
-						if (glutGetModifiers() & GLUT_ACTIVE_ALT)
-						{
+						//if (glutGetModifiers() & GLUT_ACTIVE_AL)
+						//{
 							if (axisX) cubes[selectionIndex].x -= cubes[selectionIndex].w;
 							if (axisY) cubes[selectionIndex].y -= cubes[selectionIndex].h;
 							if (axisZ) cubes[selectionIndex].z -= cubes[selectionIndex].d;							
-						} else
-						{
+			//			} else
+		//				{
 							if (axisX) cubes[selectionIndex].x -= 0.1f;
 							if (axisY) cubes[selectionIndex].y -= 0.1f;
 							if (axisZ) cubes[selectionIndex].z -= 0.1f;							
-						}
+	//					}
 						setSaveCubes();						
 					break;
 				}
