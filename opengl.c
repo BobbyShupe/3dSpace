@@ -488,6 +488,24 @@ void keyboard(unsigned char key,int x,int y)
 		if (cubeCount > 0)
 		{
 			case '+':
+				switch(editMode)
+				{
+					case MODE_MOVE:
+						if (glutGetModifiers() & GLUT_ACTIVE_ALT)
+						{
+							if (axisX) cubes[selectionIndex].x += cubes[selectionIndex].w;
+							if (axisY) cubes[selectionIndex].y += cubes[selectionIndex].h;
+							if (axisZ) cubes[selectionIndex].z += cubes[selectionIndex].d;							
+						} else
+						{
+							if (axisX) cubes[selectionIndex].x += 0.1f;
+							if (axisY) cubes[selectionIndex].y += 0.1f;
+							if (axisZ) cubes[selectionIndex].z += 0.1f;							
+						}
+						setSaveCubes();						
+					break;
+				}
+			break;
 			case '=':
 				switch(editMode)
 				{
@@ -553,6 +571,25 @@ void keyboard(unsigned char key,int x,int y)
 						if (cubes[selectionIndex].textureCoords[editSubMode] > 1.0f)
 							cubes[selectionIndex].textureCoords[editSubMode] = 0.0f;
 						setSaveCubes();
+					break;
+				}
+			break;
+			case '_':
+				switch(editMode)
+				{
+					case MODE_MOVE:
+						if (glutGetModifiers() & GLUT_ACTIVE_ALT)
+						{
+							if (axisX) cubes[selectionIndex].x -= cubes[selectionIndex].w;
+							if (axisY) cubes[selectionIndex].y -= cubes[selectionIndex].h;
+							if (axisZ) cubes[selectionIndex].z -= cubes[selectionIndex].d;							
+						} else
+						{
+							if (axisX) cubes[selectionIndex].x -= 0.1f;
+							if (axisY) cubes[selectionIndex].y -= 0.1f;
+							if (axisZ) cubes[selectionIndex].z -= 0.1f;							
+						}
+						setSaveCubes();						
 					break;
 				}
 			break;
