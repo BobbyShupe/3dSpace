@@ -493,14 +493,14 @@ void keyboard(unsigned char key,int x,int y)
 					case MODE_MOVE:
 	//					if (glutGetModifiers() & GLUT_ACTIVE_ALT)
 	//					{
-							if (axisX) cubes[selectionIndex].x += cubes[selectionIndex].w;
-							if (axisY) cubes[selectionIndex].y += cubes[selectionIndex].h;
-							if (axisZ) cubes[selectionIndex].z += cubes[selectionIndex].d;							
+							if (axisX) cubes[selectionIndex].x += cubes[selectionIndex].w * 0.002;
+							if (axisY) cubes[selectionIndex].y += cubes[selectionIndex].h * 0.002;
+							if (axisZ) cubes[selectionIndex].z += cubes[selectionIndex].d * 0.002;							
 	//					} else
 	//					{
-							if (axisX) cubes[selectionIndex].x += 0.1f;
-							if (axisY) cubes[selectionIndex].y += 0.1f;
-							if (axisZ) cubes[selectionIndex].z += 0.1f;							
+							if (axisX) cubes[selectionIndex].x += 0.1f * 0.002;
+							if (axisY) cubes[selectionIndex].y += 0.1f * 0.002;
+							if (axisZ) cubes[selectionIndex].z += 0.1f * 0.002;							
 //						}
 						setSaveCubes();						
 					break;
@@ -580,14 +580,14 @@ void keyboard(unsigned char key,int x,int y)
 					case MODE_MOVE:
 						//if (glutGetModifiers() & GLUT_ACTIVE_AL)
 						//{
-							if (axisX) cubes[selectionIndex].x -= cubes[selectionIndex].w;
-							if (axisY) cubes[selectionIndex].y -= cubes[selectionIndex].h;
-							if (axisZ) cubes[selectionIndex].z -= cubes[selectionIndex].d;							
+							if (axisX) cubes[selectionIndex].x -= cubes[selectionIndex].w * 0.002;
+							if (axisY) cubes[selectionIndex].y -= cubes[selectionIndex].h * 0.002;
+							if (axisZ) cubes[selectionIndex].z -= cubes[selectionIndex].d * 0.002;							
 			//			} else
 		//				{
-							if (axisX) cubes[selectionIndex].x -= 0.1f;
-							if (axisY) cubes[selectionIndex].y -= 0.1f;
-							if (axisZ) cubes[selectionIndex].z -= 0.1f;							
+							if (axisX) cubes[selectionIndex].x -= 0.1f * 0.002;
+							if (axisY) cubes[selectionIndex].y -= 0.1f * 0.002;
+							if (axisZ) cubes[selectionIndex].z -= 0.1f * 0.002;							
 	//					}
 						setSaveCubes();						
 					break;
