@@ -803,9 +803,10 @@ void makeCube(float _x, float _y, float _z)
 
 void drawCubes()
 {
+	glEnable(GL_TEXTURE_2D);
+
 	for (uint16_t i = 0; i < cubeCount; i ++)
 	{
-		glEnable(GL_TEXTURE_2D);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glPushMatrix();
 		glTranslatef(cubes[i].x, cubes[i].y, cubes[i].z);
@@ -822,6 +823,9 @@ void drawCubes()
                     GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                     GL_LINEAR);
+
+
+glDisable(GL_TEXTURE_2D);
 
 glBegin(GL_QUADS);                // Begin drawing the color cube with 6 quads
                                   // Top face (y = 1.0f)
@@ -846,6 +850,9 @@ glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d *
 //glTexCoord2f(1.0,1.0);
 glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
 
+glEnd();  // End of drawing color-cube
+
+
 // Front face  (z = 1.0f)
 /*
 glColor3f(1.0f, 1.0f, 1.0f);     // Red
@@ -859,6 +866,12 @@ glTexCoord2f(1.0,1.0);
 glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
 */
 
+glEnable(GL_TEXTURE_2D);
+glBegin(GL_QUADS);                // Begin drawing the color cube with 6 quads
+
+
+
+
 glColor3f(1.0f, 1.0f, 1.0f);     // Red
 glTexCoord2f(cubes[i].textureCoords[0],cubes[i].textureCoords[1]);
 glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
@@ -868,6 +881,19 @@ glTexCoord2f(cubes[i].textureCoords[4],cubes[i].textureCoords[5]);
 glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
 glTexCoord2f(cubes[i].textureCoords[6],cubes[i].textureCoords[7]);
 glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
+
+
+
+
+glEnd();  // End of drawing color-cube
+
+glDisable(GL_TEXTURE_2D);
+
+glBegin(GL_QUADS);                // Begin drawing the color cube with 6 quads
+
+
+
+
 
 
 // Back face (z = -1.0f)
@@ -903,8 +929,8 @@ glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 
 //glTexCoord2f(0.0,1.0);
 glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
 
-glEnd();  // End of drawing color-cube
 
+glEnd();  // End of drawing color-cube
 
 
 		if (selectionIndex == i)
