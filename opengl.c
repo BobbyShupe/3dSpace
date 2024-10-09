@@ -142,6 +142,10 @@ void specialKeyboardUp(int key,int x,int y);
 bool constrainPasteToOriginalPosition = false;
 bool constrainToTextureDimensions = false;
 
+void incValue();
+void decValue();
+void mouseWheel(int,int,int,int);
+
 int main(int argc,char**argv)
 {
 	tmpstr = (char*)malloc(sizeof(char) * 5);
@@ -162,7 +166,7 @@ int main(int argc,char**argv)
     glutKeyboardUpFunc(keyboard_up);
 	glutSpecialFunc(specialKeyboard);
 	glutSpecialUpFunc(specialKeyboardUp);
-
+	glutMouseWheelFunc(mouseWheel);
 	DIR *d;
 	struct dirent *dir;
 	d = opendir(".");
@@ -1447,4 +1451,153 @@ void pasteCube()
 		for (uint8_t i = 0; i < 7; i ++)
 			cubes[cubeCount-1].textureCoords[i] = cubeCopy.textureCoords[i];
 	}
+}
+
+void incValue()
+{
+	switch(editMode)
+	{
+		case MODE_NORMAL:
+
+		break;
+		case MODE_SCALE:
+			if (axisX) cubes[selectionIndex].w += 0.1f * multiplier;
+			if (axisY) cubes[selectionIndex].h += 0.1f * multiplier;
+			if (axisZ) cubes[selectionIndex].d += 0.1f * multiplier;
+			setSaveCubes();
+		break;
+		case MODE_MOVE:
+			if (glutGetModifiers() & GLUT_ACTIVE_ALT)
+			{
+				if (axisX) cubes[selectionIndex].x += cubes[selectionIndex].w * multiplier;
+				if (axisY) cubes[selectionIndex].y += cubes[selectionIndex].h * multiplier;
+				if (axisZ) cubes[selectionIndex].z += cubes[selectionIndex].d * multiplier;							
+			} else
+			{
+				if (axisX) cubes[selectionIndex].x += 0.1f * multiplier;
+				if (axisY) cubes[selectionIndex].y += 0.1f * multiplier;
+				if (axisZ) cubes[selectionIndex].z += 0.1f * multiplier;							
+			}
+			setSaveCubes();
+		break;
+		case MODE_ROTATE:
+			if (axisX) 
+			{
+				cubes[selectionIndex].rX += 0.1f * multiplier;
+				if (cubes[selectionIndex].rX > 360.0f) cubes[selectionIndex].rX = 0.0f;
+					setSaveCubes();
+			}
+			if (axisY)
+			{
+				cubes[selectionIndex].rY += 0.1f * multiplier;
+				if (cubes[selectionIndex].rY > 360.0f) cubes[selectionIndex].rY = 0.0f;
+					setSaveCubes();
+			} 
+			if (axisZ)
+			{
+				cubes[selectionIndex].rZ += 0.1f * multiplier;
+				if (cubes[selectionIndex].rZ > 360.0f) cubes[selectionIndex].rZ = 0.0f;
+					setSaveCubes();
+			}
+		break;
+		case MODE_TEXTURE:
+			cubes[selectionIndex].image ++;
+			if (cubes[selectionIndex].image == (textureCount)) 
+				cubes[selectionIndex].image = 0;
+			strcpy(cubes[selectionIndex].imageFileName, filenames[cubes[selectionIndex].image]);
+
+			if (constrainToTextureDimensions)
+			{
+				if (axisX) cubes[selectionIndex].w = imageParams[cubes[selectionIndex].image].width * 0.001f;
+				if (axisY) cubes[selectionIndex].h = imageParams[cubes[selectionIndex].image].height * 0.001f;
+			}
+			setSaveCubes();
+		break;
+		case MODE_TEXTURECOORDS:
+			cubes[selectionIndex].textureCoords[editSubMode] += 0.1f;
+			if (cubes[selectionIndex].textureCoords[editSubMode] > 1.0f)
+				cubes[selectionIndex].textureCoords[editSubMode] = 0.0f;
+			setSaveCubes();
+		break;
+	}
+}
+
+void decValue()
+{
+	switch(editMode)
+	{
+		case MODE_NORMAL:
+
+		break;
+		case MODE_SCALE:
+			if (axisX) cubes[selectionIndex].w -= 0.1f * multiplier;
+			if (axisY) cubes[selectionIndex].h -= 0.1f * multiplier;
+			if (axisZ) cubes[selectionIndex].d -= 0.1f * multiplier;
+				setSaveCubes();
+		break;
+		case MODE_MOVE:
+			if (glutGetModifiers() & GLUT_ACTIVE_ALT)
+			{
+				if (axisX) cubes[selectionIndex].x -= cubes[selectionIndex].w * multiplier;
+				if (axisY) cubes[selectionIndex].y -= cubes[selectionIndex].h * multiplier;
+				if (axisZ) cubes[selectionIndex].z -= cubes[selectionIndex].d * multiplier;							
+			} else
+			{
+				if (axisX) cubes[selectionIndex].x -= 0.1f * multiplier;
+				if (axisY) cubes[selectionIndex].y -= 0.1f * multiplier;
+				if (axisZ) cubes[selectionIndex].z -= 0.1f * multiplier;							
+			}
+			setSaveCubes();
+		break;
+		case MODE_ROTATE:
+			if (axisX) 
+			{
+				cubes[selectionIndex].rX -= 0.1f * multiplier;
+				if (cubes[selectionIndex].rX < 0.0f) cubes[selectionIndex].rX = 360.0f;
+				setSaveCubes();
+			}
+			if (axisY)
+			{
+				cubes[selectionIndex].rY -= 0.1f * multiplier;
+				if (cubes[selectionIndex].rY < 0.0f) cubes[selectionIndex].rY = 360.0f;
+				setSaveCubes();
+			} 
+			if (axisZ)
+			{
+				cubes[selectionIndex].rZ -= 0.1f * multiplier;
+				if (cubes[selectionIndex].rZ < 0.0f) cubes[selectionIndex].rZ = 360.0f;
+				setSaveCubes();
+			}
+		break;
+		case MODE_TEXTURE:
+
+			if (cubes[selectionIndex].image > 0)
+				cubes[selectionIndex].image --;
+			else
+				cubes[selectionIndex].image = textureCount - 1;
+
+			memset(cubes[selectionIndex].imageFileName, 0, 64);
+			strcpy(cubes[selectionIndex].imageFileName, filenames[cubes[selectionIndex].image]);
+			if (constrainToTextureDimensions)
+			{
+				if (axisX) cubes[selectionIndex].w = imageParams[cubes[selectionIndex].image].width * 0.001f;
+				if (axisY) cubes[selectionIndex].h = imageParams[cubes[selectionIndex].image].height * 0.001f;
+			}
+					
+			setSaveCubes();
+		break;
+		case MODE_TEXTURECOORDS:
+			cubes[selectionIndex].textureCoords[editSubMode] -= 0.1f;
+			if (cubes[selectionIndex].textureCoords[editSubMode] < 0.0f)
+				cubes[selectionIndex].textureCoords[editSubMode] = 1.0f;
+			setSaveCubes();
+		break;
+	}
+
+}
+
+void mouseWheel(int button, int dir, int x, int y)
+{
+	if (dir > 0) incValue();
+	if (dir < 0) decValue();
 }
