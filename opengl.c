@@ -19,7 +19,7 @@
 
 //width and height of the window ( Aspect ratio 16:9 )
 const int width = 16*50;
-const int height = 9*50;
+const int height = 900;
 
 float pitch = 0.0, yaw= 0.0, roll=0.0;
 float camX=0.0,camZ=0.0, camY=0.0;
