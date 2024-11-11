@@ -976,51 +976,58 @@ glEnd();  // End of drawing color-cube
 
 		if (selectionIndex == i)
 		{
-			glDisable(GL_TEXTURE_2D);
-			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE);
-
-
-			glBegin(GL_QUADS);                // Begin draw	ing the color cube with 6 quads
-                                  // Top face (y = 1.0f)
-                                  // Define vertices in counter-clockwise (CCW) order with normal pointing out
-			glColor3f(0.33f, 1.0f, 0.0f);     // Green
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
-
-// Bottom face (y = -1.0f)
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
-
-// Front face  (z = 1.0f)
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
-
-// Back face (z = -1.0f)
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
-
-// Left face (x = -1.0f)
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
-			glVertex3f((cubes[i].w * 0.5) * -1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
-
-// Right face (x = 1.0f)
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * -1.0f);
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * 1.0f, (cubes[i].d * 0.5) * 1.0f);
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * 1.0f);
-			glVertex3f((cubes[i].w * 0.5) * 1.0f, (cubes[i].h * 0.5) * -1.0f, (cubes[i].d * 0.5) * -1.0f);
-	
-			glEnd();  // End of drawing color-cube
-
+		glDisable(GL_LIGHTING);
+            glColor3f(0.0f, 1.0f, 0.0f);  // Green color
+            glLineWidth(2.0f);  // Set line width for the outline
+            
+            float w = cubes[i].w / 2;
+            float h = cubes[i].h / 2;
+            float d = cubes[i].d / 2;
+            
+            // Draw outline for each face
+            glBegin(GL_LINE_LOOP);
+            glVertex3f(-w, -h, -d);
+            glVertex3f(w, -h, -d);
+            glVertex3f(w, h, -d);
+            glVertex3f(-w, h, -d);
+            glEnd();
+            
+            glBegin(GL_LINE_LOOP);
+            glVertex3f(-w, -h, d);
+            glVertex3f(w, -h, d);
+            glVertex3f(w, h, d);
+            glVertex3f(-w, h, d);
+            glEnd();
+            
+            glBegin(GL_LINE_LOOP);
+            glVertex3f(-w, -h, -d);
+            glVertex3f(-w, -h, d);
+            glVertex3f(-w, h, d);
+            glVertex3f(-w, h, -d);
+            glEnd();
+            
+            glBegin(GL_LINE_LOOP);
+            glVertex3f(w, -h, -d);
+            glVertex3f(w, -h, d);
+            glVertex3f(w, h, d);
+            glVertex3f(w, h, -d);
+            glEnd();
+            
+            glBegin(GL_LINE_LOOP);
+            glVertex3f(-w, h, -d);
+            glVertex3f(w, h, -d);
+            glVertex3f(w, h, d);
+            glVertex3f(-w, h, d);
+            glEnd();
+            
+            glBegin(GL_LINE_LOOP);
+            glVertex3f(-w, -h, -d);
+            glVertex3f(w, -h, -d);
+            glVertex3f(w, -h, d);
+            glVertex3f(-w, -h, d);
+            glEnd();
+            
+//            glEnable(GL_LIGHTING);
 		}
 		glPopMatrix();
 
